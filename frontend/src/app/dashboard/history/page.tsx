@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import {
   ArrowUpRight,
   ArrowDownRight,
@@ -16,7 +16,7 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
+
 import { SnapshotModal } from "@/components/SnapshotModal"
 
 interface Transaction {
@@ -29,7 +29,13 @@ interface Transaction {
   timestamp: string
   hash: string
   snapshotRootHash?: string
-  snapshotData?: any
+  snapshotData?: {
+    txHash: string
+    chainUid: number
+    amount: number
+    token: string
+    [key: string]: unknown
+  }
 }
 
 // Mock data - replace with actual data from your backend

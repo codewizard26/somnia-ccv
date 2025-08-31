@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button"
 interface SnapshotModalProps {
     trigger: React.ReactNode
     title?: string
-    data: any
+    data: Record<string, unknown>
     rootHash?: string
 }
 

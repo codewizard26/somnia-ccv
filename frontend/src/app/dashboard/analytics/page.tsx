@@ -197,7 +197,7 @@ export default function AnalyticsPage() {
                                 <CartesianGrid strokeDasharray="3 3" />
                                 <XAxis dataKey="date" />
                                 <YAxis tickFormatter={(value) => formatCurrency(value)} />
-                                <Tooltip formatter={(value: any) => formatCurrency(value)} />
+                                <Tooltip formatter={(value: number) => formatCurrency(value)} />
                                 <Legend />
                                 <Line type="monotone" dataKey="value" name="TVL" stroke="#3B82F6" strokeWidth={2} />
                             </LineChart>
@@ -221,7 +221,7 @@ export default function AnalyticsPage() {
                                     <CartesianGrid strokeDasharray="3 3" />
                                     <XAxis dataKey="date" />
                                     <YAxis tickFormatter={(value) => formatCurrency(value)} />
-                                    <Tooltip formatter={(value: any) => formatCurrency(value)} />
+                                    <Tooltip formatter={(value: number) => formatCurrency(value)} />
                                     <Legend />
                                     <Bar dataKey="deposits" name="Deposits" fill="#3B82F6" />
                                     <Bar dataKey="withdrawals" name="Withdrawals" fill="#EF4444" />
@@ -282,7 +282,7 @@ export default function AnalyticsPage() {
                                     orientation="right"
                                     tickFormatter={(value) => formatCurrency(value)}
                                 />
-                                <Tooltip formatter={(value: any) => formatCurrency(value)} />
+                                <Tooltip formatter={(value: number) => formatCurrency(value)} />
                                 <Legend />
                                 <Line yAxisId="left" type="monotone" dataKey="supply" name="Token Supply" stroke="#3B82F6" strokeWidth={2} />
                                 <Line yAxisId="right" type="monotone" dataKey="tvl" name="TVL" stroke="#60A5FA" strokeWidth={2} />

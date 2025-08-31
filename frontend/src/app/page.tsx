@@ -1,14 +1,10 @@
 'use client';
 
 import { ConnectButton } from '@rainbow-me/rainbowkit';
-import { useAccount } from 'wagmi';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
 import { Database, Cpu, Shield, ArrowRight, ExternalLink, Link, Coins, BarChart3, Timer, GitMerge } from 'lucide-react';
-import Image from 'next/image';
 
 export default function Home() {
-  const { isConnected } = useAccount();
   const router = useRouter();
 
   return (

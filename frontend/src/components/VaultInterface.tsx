@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { useAccount, useBalance, useChainId, useReadContract, useWriteContract, useSwitchChain } from "wagmi"
 import { parseEther, formatEther } from "viem"
 import { ArrowUpRight, ArrowDownRight, Loader2, Database } from "lucide-react"

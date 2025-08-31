@@ -2,7 +2,6 @@
 
 import { useAccount, useDisconnect, useConnect, useChainId } from "wagmi"
 import {
-  ChevronDown,
   LogOut,
   Copy,
   Check,
