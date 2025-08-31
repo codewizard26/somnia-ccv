@@ -1,223 +1,139 @@
-# Rebase Token Vault - 0G Hackathon Project
+# 🌟 0G Smart Vault
 
 A decentralized interest-bearing vault built on the 0G network that allows users to deposit 0G tokens and earn interest through rebase token mechanics.
 
+## 🎉 Deployment Status
+
+### 📋 Contract Addresses
+
+| Contract | Address | Status |
+|----------|---------|--------|
+| **RebaseToken** | `0xE4aD0ADAf7E5759569081dF90fC76381eD70A2B5` | ✅ Deployed |
+| **Pool** | `0x6c1FEDA3Ace971Ba274BC5b5622acC08Ad2A872C` | ✅ Deployed |
+| **Vault** | `0x1a89Be0B6e08B8cF668B36c6F95f9781ABC917ba` | ✅ Deployed |
+
+### 🔧 Configuration
+- **Network:** 0G Galileo Testnet (Chain ID: 2131427466778448014)
+- **Router:** `0x5c21Bb4Bd151Bd6Fa2E6d7d1b63B83485529Cdb4`
+- **RNM Proxy:** `0x83eBE7Ceb4916C3Cb86662f65b353E4324390059`
+- **Link Token:** `0xd211Bd4ff8fd68C16016C5c7a66b6e10F6227C49`
+
+### ✅ Deployment Status
+- ✅ **Permissions:** All roles granted correctly
+- ✅ **Test Results:** Successful deposit of 0.1 0G tokens
+- ✅ **Frontend:** Contract addresses updated
+- ✅ **Network:** Proper chain detection & switching
+
 ## 🚀 Features
 
-- **Interest-Bearing Vault**: Deposit 0G tokens to earn interest
-- **Rebase Token Mechanics**: Automatic token rebasing with interest accrual
-- **Instant Deposits/Withdrawals**: No lock-up periods
-- **Modern Web Interface**: Built with Next.js and Tailwind CSS
-- **Wallet Integration**: Seamless wallet connection with RainbowKit
-- **0G Network**: Built specifically for the 0G Galileo testnet
+### Core Features
+1. **Interest-Bearing Vault**
+   - Deposit 0G tokens to earn interest
+   - No lock-up periods for deposits/withdrawals
+   - Automatic interest calculations
 
-## 🏗️ Architecture
+2. **Rebase Token Mechanics**
+   - Dynamic balance calculation
+   - Automatic token rebasing
+   - Interest accrual through rebasing
 
-### Smart Contracts
-- **RebaseToken.sol**: ERC20 token with rebase mechanics
-- **Vault.sol**: Interest-bearing vault for deposits
-- **RebaseTokenPool.sol**: Pool for managing token liquidity
+3. **Advanced Security**
+   - Immutable snapshots on 0G Storage
+   - Comprehensive audit trails
+   - Bank-grade security features
 
-### Frontend
-- **Next.js 14**: React framework with App Router
-- **Tailwind CSS**: Utility-first CSS framework
-- **Wagmi + RainbowKit**: Web3 wallet integration
-- **TypeScript**: Type-safe development
+4. **AI-Powered Analytics**
+   - Real-time analytics dashboard
+   - Risk insights and monitoring
+   - Performance tracking
+   
+### Technical Implementation
+- **Snapshot System**
+  - JSON snapshots stored on 0G Storage
+  - Immutable proof generation
+  - Instant access to historical data
 
-## 📋 Prerequisites
+- **Analytics Processing**
+  - Data aggregation via 0G Compute
+  - Real-time metrics calculation
+  - AI-powered risk assessment
 
-- Node.js 18+ 
-- Foundry (for smart contract development)
-- MetaMask or any Web3 wallet
-- 0G testnet tokens
+## 📈 Development Roadmap
 
-## 🛠️ Setup Instructions
+### Phase 1: Core Infrastructure ✅
+- [x] Smart contract development
+- [x] Vault UI with deposit/withdraw functionality
+- [x] Basic dashboard implementation
+- [x] Network integration & switching
+- [x] MetaMask integration
 
-### 1. Clone the Repository
-```bash
-git clone <repository-url>
-cd nft-foundry
-```
+### Phase 2: 0G Storage Integration 🔄
+- [ ] Snapshot system implementation
+- [ ] IPFS/0G Storage integration
+- [ ] Historical data tracking
+- [ ] Proof generation system
+- [ ] Transaction history with proofs
 
-### 2. Install Dependencies
-```bash
-# Install Foundry dependencies
-forge install
+### Phase 3: Analytics Platform 🔮
+- [ ] 0G Compute integration
+- [ ] Advanced analytics dashboard
+- [ ] Performance metrics
+- [ ] Risk assessment system
+- [ ] AI-powered insights
 
-# Install frontend dependencies
-cd frontend
-npm install
-```
+### Phase 4: Advanced Features 🔮
+- [ ] Cross-chain integration (CCIP)
+- [ ] Multi-token support
+- [ ] Advanced governance features
+- [ ] Enhanced security features
+- [ ] Community features
 
-### 3. Environment Setup
-Create a `.env` file in the root directory:
-```env
-GALILEO_RPC_URL=https://galileo.0g.ai
-GALILEO_PRIVATE_KEY=your_private_key_here
-```
+## 🛠 Quick Start
 
-### 4. Deploy Smart Contracts
-```bash
-# Make deployment script executable
-chmod +x deployTo0G.sh
+1. **Clone & Install**
+   ```bash
+   git clone [repository-url]
+   cd frontend
+   npm install
+   ```
 
-# Deploy contracts to 0G testnet
-./deployTo0G.sh
-```
+2. **Start Development Server**
+   ```bash
+   npm run dev
+   ```
 
-### 5. Update Frontend Configuration
-After deployment, update the contract addresses in `frontend/src/config/contracts.ts`:
-```typescript
-export const CONTRACTS = {
-  REBASE_TOKEN: "deployed_contract_address",
-  POOL: "deployed_contract_address", 
-  VAULT: "deployed_contract_address",
-};
-```
+3. **Connect Wallet**
+   - Switch to 0G Galileo Testnet
+   - Use the provided faucet to get test tokens
+   - Follow MetaMask setup guide in `METAMASK_SETUP_GUIDE.md`
 
-### 6. Run the Frontend
-```bash
-cd frontend
-npm run dev
-```
+## 📚 Documentation
 
-Visit `http://localhost:3000` to access the application.
+- [Setup Guide](SETUP_GUIDE.md)
+- [MetaMask Setup](frontend/METAMASK_SETUP_GUIDE.md)
+- [0G Connection Guide](frontend/0G_CONNECTION_GUIDE.md)
+- [Vault Mechanics](VAULT_MECHANICS.md)
+- [Deployment Guide](DEPLOYMENT_SCRIPTS_GUIDE.md)
 
-## 🎯 How It Works
+## 🔗 Links
 
-### 1. Deposit Process
-1. Connect your wallet to the 0G network
-2. Enter the amount of 0G tokens you want to deposit
-3. Click "Deposit" to send tokens to the vault
-4. Receive RBT tokens representing your share
+- [Documentation](https://docs.0g.ai)
+- [GitHub](https://github.com/0g-ai)
+- [Twitter](https://twitter.com/0g_protocol)
+- [Discord](https://discord.gg/0g)
 
-### 2. Interest Accrual
-- RBT tokens automatically rebase with interest
-- Your token balance increases over time
-- No additional actions required
+## 🏗 Project Structure
 
-### 3. Withdrawal Process
-1. Enter the amount of RBT tokens you want to withdraw
-2. Click "Withdraw" to convert RBT back to 0G
-3. Receive your original deposit plus earned interest
-
-## 🔧 Development
-
-### Smart Contract Development
-```bash
-# Compile contracts
-forge build
-
-# Run tests
-forge test
-
-# Deploy to local network
-forge script script/Deployer.s.sol --rpc-url http://localhost:8545
-```
-
-### Frontend Development
-```bash
-cd frontend
-
-# Start development server
-npm run dev
-
-# Build for production
-npm run build
-
-# Run linting
-npm run lint
-```
-
-## 📊 Contract Addresses
-
-After deployment, contract addresses will be saved in `deployment-info.json`:
-
-```json
-{
-  "network": "0G Galileo Testnet",
-  "contracts": {
-    "rebaseToken": {
-      "address": "0x...",
-      "name": "Rebase Token",
-      "symbol": "RBT"
-    },
-    "pool": {
-      "address": "0x...",
-      "description": "Rebase Token Pool"
-    },
-    "vault": {
-      "address": "0x...",
-      "description": "Interest-bearing vault"
-    }
-  }
-}
-```
-
-## 🌐 Network Configuration
-
-### 0G Galileo Testnet
-- **Chain ID**: 2131427466778448014
-- **RPC URL**: https://galileo.0g.ai
-- **Currency**: 0G
-- **Block Explorer**: https://galileo.0g.ai
-
-## 🧪 Testing
-
-### Smart Contract Tests
-```bash
-# Run all tests
-forge test
-
-# Run specific test file
-forge test --match-contract RebaseToken
-```
-
-### Frontend Tests
-```bash
-cd frontend
-npm test
-```
-
-## 📝 API Reference
-
-### Vault Functions
-- `deposit()`: Deposit 0G tokens to the vault
-- `withdraw(uint256 amount)`: Withdraw RBT tokens from the vault
-- `balanceOf(address user)`: Get user's vault balance
-
-### RebaseToken Functions
-- `transfer(address to, uint256 amount)`: Transfer RBT tokens
-- `balanceOf(address user)`: Get user's token balance
-- `totalSupply()`: Get total token supply
+- `/frontend` - Next.js frontend application
+- `/src` - Smart contract source code
+- `/test` - Contract test suite
+- `/script` - Deployment scripts
+- `/lib` - External dependencies
 
 ## 🤝 Contributing
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
+See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines.
 
 ## 📄 License
 
-This project is licensed under the MIT License.
-
-## 🆘 Support
-
-For support and questions:
-- Create an issue in the repository
-- Check the documentation
-- Join the 0G community
-
-## 🎉 Hackathon Submission
-
-This project was built for the 0G Hackathon and demonstrates:
-- Innovative use of rebase token mechanics
-- Seamless user experience
-- Modern web3 development practices
-- Integration with the 0G network
-
----
-
-**Built with ❤️ for the 0G Hackathon** 
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

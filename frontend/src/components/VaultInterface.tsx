@@ -335,10 +335,10 @@ export default function VaultInterface() {
 
     if (!isConnected) {
         return (
-            <Card>
-                <CardHeader>
-                    <CardTitle>Connect Wallet</CardTitle>
-                    <CardDescription>Please connect your wallet to use the vault</CardDescription>
+            <Card className="border-none shadow-lg bg-gradient-to-br from-white to-blue-50">
+                <CardHeader className="space-y-1">
+                    <CardTitle className="text-2xl text-blue-900">Connect Wallet</CardTitle>
+                    <CardDescription className="text-blue-600">Please connect your wallet to use the vault</CardDescription>
                 </CardHeader>
             </Card>
         )
@@ -346,13 +346,16 @@ export default function VaultInterface() {
 
     if (!isCorrectNetwork) {
         return (
-            <Card>
-                <CardHeader>
-                    <CardTitle>Wrong Network</CardTitle>
-                    <CardDescription>Please switch to 0G Galileo Testnet</CardDescription>
+            <Card className="border-none shadow-lg bg-gradient-to-br from-white to-blue-50">
+                <CardHeader className="space-y-1">
+                    <CardTitle className="text-2xl text-blue-900">Wrong Network</CardTitle>
+                    <CardDescription className="text-blue-600">Please switch to 0G Galileo Testnet</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <Button onClick={handleSwitchTo0G} className="w-full">
+                    <Button
+                        onClick={handleSwitchTo0G}
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white transition-all"
+                    >
                         Switch to 0G Galileo Testnet
                     </Button>
                 </CardContent>
@@ -361,78 +364,40 @@ export default function VaultInterface() {
     }
 
     return (
-        <div className="space-y-6">
-            {/* Balance Display */}
-            <Card>
-                <CardHeader>
-                    <CardTitle>Your Balances</CardTitle>
-                    <CardDescription>Available tokens for vault operations</CardDescription>
+        <div className="space-y-6 max-w-4xl mx-auto">
+            {/* Deposit/Withdraw Interface - Moved to top */}
+            <Card className="border-none shadow-lg bg-gradient-to-br from-white to-blue-50">
+                <CardHeader className="space-y-1">
+                    <CardTitle className="text-3xl font-bold text-blue-900 text-left">Vault Operations</CardTitle>
+                    <CardDescription className="text-blue-600 text-left text-lg">Deposit or withdraw tokens from the vault</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <p className="text-sm text-gray-600">0G Balance</p>
-                            <p className="text-2xl font-bold">
-                                {balance ? `${parseFloat(balance.formatted).toFixed(4)} ${balance.symbol}` : "0.0000 0G"}
-                            </p>
-                        </div>
-                        <div>
-                            <p className="text-sm text-gray-600">RBT Balance</p>
-                            <p className="text-2xl font-bold text-purple-600">
-                                {userRBTBalance ? `${parseFloat(formatEther(userRBTBalance as bigint)).toFixed(6)} RBT` : "0.000000 RBT"}
-                            </p>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
-
-            {/* Vault Statistics */}
-            <Card>
-                <CardHeader>
-                    <CardTitle>Vault Statistics</CardTitle>
-                    <CardDescription>Current vault performance</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <p className="text-sm text-gray-600">Vault Balance</p>
-                            <p className="text-xl font-bold text-green-600">
-                                {vaultBalance ? `${parseFloat(formatEther(vaultBalance as bigint)).toFixed(4)} 0G` : "0.0000 0G"}
-                            </p>
-                        </div>
-                        <div>
-                            <p className="text-sm text-gray-600">Total RBT Supply</p>
-                            <p className="text-xl font-bold text-purple-600">
-                                {rbtTotalSupply ? `${parseFloat(formatEther(rbtTotalSupply as bigint)).toFixed(6)} RBT` : "0.000000 RBT"}
-                            </p>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
-
-            {/* Deposit/Withdraw Interface */}
-            <Card>
-                <CardHeader>
-                    <CardTitle>Vault Operations</CardTitle>
-                    <CardDescription>Deposit or withdraw tokens from the vault</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <Tabs value={activeTab} onValueChange={setActiveTab}>
-                        <TabsList className="grid w-full grid-cols-2">
-                            <TabsTrigger value="deposit" className="flex items-center space-x-2">
-                                <ArrowDownRight className="w-4 h-4" />
-                                <span>Deposit</span>
+                    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                        <TabsList className="grid w-full grid-cols-2 mb-8">
+                            <TabsTrigger
+                                value="deposit"
+                                className="data-[state=active]:bg-blue-600 data-[state=active]:text-white text-left pl-4"
+                            >
+                                <div className="flex items-center space-x-2">
+                                    <ArrowDownRight className="w-5 h-5" />
+                                    <span className="text-lg">Deposit</span>
+                                </div>
                             </TabsTrigger>
-                            <TabsTrigger value="withdraw" className="flex items-center space-x-2">
-                                <ArrowUpRight className="w-4 h-4" />
-                                <span>Withdraw</span>
+                            <TabsTrigger
+                                value="withdraw"
+                                className="data-[state=active]:bg-blue-600 data-[state=active]:text-white text-left pl-4"
+                            >
+                                <div className="flex items-center space-x-2">
+                                    <ArrowUpRight className="w-5 h-5" />
+                                    <span className="text-lg">Withdraw</span>
+                                </div>
                             </TabsTrigger>
                         </TabsList>
 
-                        <TabsContent value="deposit" className="space-y-4 mt-6">
+                        <TabsContent value="deposit" className="space-y-4">
                             <div className="space-y-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    <label className="block text-lg font-medium text-blue-900 mb-3 text-left">
                                         Amount (0G)
                                     </label>
                                     <div className="flex space-x-2">
@@ -442,55 +407,56 @@ export default function VaultInterface() {
                                             onChange={(e) => setAmount(e.target.value)}
                                             placeholder="0.0"
                                             disabled={isLoading || isPending}
-                                            className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50"
+                                            className="flex-1 px-4 py-4 text-lg border border-blue-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 bg-white"
                                         />
                                         <Button
                                             onClick={handleMaxDeposit}
                                             disabled={isLoading || isPending}
                                             variant="outline"
-                                            className="px-4"
+                                            className="px-8 text-lg rounded-xl border-blue-200 text-blue-600 hover:bg-blue-50"
                                         >
                                             Max
                                         </Button>
                                     </div>
                                 </div>
 
-                                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                                    <div className="flex items-center space-x-2">
-                                        <Database className="w-4 h-4 text-blue-600" />
-                                        <span className="text-sm font-medium">Store Snapshot on 0G</span>
+                                <div className="flex items-center justify-between p-4 bg-white rounded-xl border border-blue-100">
+                                    <div className="flex items-center space-x-3">
+                                        <Database className="w-6 h-6 text-blue-600" />
+                                        <span className="text-lg font-medium text-blue-900">Store Snapshot on 0G</span>
                                     </div>
                                     <Switch
                                         checked={storeSnapshot}
                                         onCheckedChange={setStoreSnapshot}
                                         disabled={isLoading || isPending}
+                                        className="data-[state=checked]:bg-blue-600"
                                     />
                                 </div>
 
                                 <Button
                                     onClick={handleDeposit}
                                     disabled={isLoading || isPending || !amount || parseFloat(amount) <= 0}
-                                    className="w-full bg-green-600 hover:bg-green-700"
+                                    className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-xl py-7 text-lg transition-all"
                                 >
                                     {isLoading || isPending ? (
                                         <>
-                                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                            Processing...
+                                            <Loader2 className="w-6 h-6 mr-2 animate-spin" />
+                                            <span className="text-lg">Processing...</span>
                                         </>
                                     ) : (
                                         <>
-                                            <ArrowDownRight className="w-4 h-4 mr-2" />
-                                            Deposit 0G
+                                            <ArrowDownRight className="w-6 h-6 mr-2" />
+                                            <span className="text-lg">Deposit 0G</span>
                                         </>
                                     )}
                                 </Button>
                             </div>
                         </TabsContent>
 
-                        <TabsContent value="withdraw" className="space-y-4 mt-6">
+                        <TabsContent value="withdraw" className="space-y-4">
                             <div className="space-y-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    <label className="block text-lg font-medium text-blue-900 mb-3 text-left">
                                         Amount (RBT)
                                     </label>
                                     <div className="flex space-x-2">
@@ -500,46 +466,46 @@ export default function VaultInterface() {
                                             onChange={(e) => setAmount(e.target.value)}
                                             placeholder="0.0"
                                             disabled={isLoading || isPending}
-                                            className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50"
+                                            className="flex-1 px-4 py-4 text-lg border border-blue-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 bg-white"
                                         />
                                         <Button
                                             onClick={handleMaxWithdraw}
                                             disabled={isLoading || isPending}
                                             variant="outline"
-                                            className="px-4"
+                                            className="px-8 text-lg rounded-xl border-blue-200 text-blue-600 hover:bg-blue-50"
                                         >
                                             Max
                                         </Button>
                                     </div>
                                 </div>
 
-                                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                                    <div className="flex items-center space-x-2">
-                                        <Database className="w-4 h-4 text-blue-600" />
-                                        <span className="text-sm font-medium">Store Snapshot on 0G</span>
+                                <div className="flex items-center justify-between p-4 bg-white rounded-xl border border-blue-100">
+                                    <div className="flex items-center space-x-3">
+                                        <Database className="w-6 h-6 text-blue-600" />
+                                        <span className="text-lg font-medium text-blue-900">Store Snapshot on 0G</span>
                                     </div>
                                     <Switch
                                         checked={storeSnapshot}
                                         onCheckedChange={setStoreSnapshot}
                                         disabled={isLoading || isPending}
+                                        className="data-[state=checked]:bg-blue-600"
                                     />
                                 </div>
 
                                 <Button
                                     onClick={handleWithdraw}
                                     disabled={isLoading || isPending || !amount || parseFloat(amount) <= 0}
-                                    variant="outline"
-                                    className="w-full border-red-300 text-red-600 hover:bg-red-50"
+                                    className="w-full border-2 border-blue-200 text-blue-600 hover:bg-blue-50 rounded-xl py-7 text-lg transition-all"
                                 >
                                     {isLoading || isPending ? (
                                         <>
-                                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                            Processing...
+                                            <Loader2 className="w-6 h-6 mr-2 animate-spin" />
+                                            <span className="text-lg">Processing...</span>
                                         </>
                                     ) : (
                                         <>
-                                            <ArrowUpRight className="w-4 h-4 mr-2" />
-                                            Withdraw 0G
+                                            <ArrowUpRight className="w-6 h-6 mr-2" />
+                                            <span className="text-lg">Withdraw 0G</span>
                                         </>
                                     )}
                                 </Button>
@@ -549,40 +515,86 @@ export default function VaultInterface() {
                 </CardContent>
             </Card>
 
+            {/* Balance Display */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Card className="border-none shadow-lg bg-gradient-to-br from-white to-blue-50">
+                    <CardHeader className="space-y-1">
+                        <CardTitle className="text-2xl text-blue-900 text-left">Your Balances</CardTitle>
+                        <CardDescription className="text-blue-600 text-left">Available tokens</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="p-4 bg-white rounded-xl shadow-sm border border-blue-100">
+                            <p className="text-sm text-blue-600 mb-2 text-left">0G Balance</p>
+                            <p className="text-2xl font-bold text-blue-900 text-left">
+                                {balance ? `${parseFloat(balance.formatted).toFixed(4)} ${balance.symbol}` : "0.0000 0G"}
+                            </p>
+                        </div>
+                        <div className="p-4 bg-white rounded-xl shadow-sm border border-blue-100">
+                            <p className="text-sm text-blue-600 mb-2 text-left">RBT Balance</p>
+                            <p className="text-2xl font-bold text-blue-900 text-left">
+                                {userRBTBalance ? `${parseFloat(formatEther(userRBTBalance as bigint)).toFixed(6)} RBT` : "0.000000 RBT"}
+                            </p>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Vault Statistics */}
+                <Card className="border-none shadow-lg bg-gradient-to-br from-white to-blue-50">
+                    <CardHeader className="space-y-1">
+                        <CardTitle className="text-2xl text-blue-900 text-left">Vault Statistics</CardTitle>
+                        <CardDescription className="text-blue-600 text-left">Current performance</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="p-4 bg-white rounded-xl shadow-sm border border-blue-100">
+                            <p className="text-sm text-blue-600 mb-2 text-left">Vault Balance</p>
+                            <p className="text-2xl font-bold text-blue-900 text-left">
+                                {vaultBalance ? `${parseFloat(formatEther(vaultBalance as bigint)).toFixed(4)} 0G` : "0.0000 0G"}
+                            </p>
+                        </div>
+                        <div className="p-4 bg-white rounded-xl shadow-sm border border-blue-100">
+                            <p className="text-sm text-blue-600 mb-2 text-left">Total RBT Supply</p>
+                            <p className="text-2xl font-bold text-blue-900 text-left">
+                                {rbtTotalSupply ? `${parseFloat(formatEther(rbtTotalSupply as bigint)).toFixed(6)} RBT` : "0.000000 RBT"}
+                            </p>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+
             {/* Recent Transactions */}
             {transactions.length > 0 && (
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Recent Transactions</CardTitle>
-                        <CardDescription>Your latest vault operations</CardDescription>
+                <Card className="border-none shadow-lg bg-gradient-to-br from-white to-blue-50">
+                    <CardHeader className="space-y-1">
+                        <CardTitle className="text-2xl text-blue-900">Recent Transactions</CardTitle>
+                        <CardDescription className="text-blue-600">Your latest vault operations</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <div className="space-y-3">
+                        <div className="space-y-4">
                             {transactions.slice(0, 5).map((tx) => (
-                                <div key={tx.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                                    <div className="flex items-center space-x-3">
-                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${tx.type === "deposit" ? "bg-green-100" : "bg-red-100"
+                                <div key={tx.id} className="flex items-center justify-between p-4 bg-white rounded-xl border border-blue-100 hover:border-blue-200 transition-all">
+                                    <div className="flex items-center space-x-4">
+                                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${tx.type === "deposit" ? "bg-blue-100 text-blue-600" : "bg-red-100 text-red-600"
                                             }`}>
                                             {tx.type === "deposit" ? (
-                                                <ArrowDownRight className="w-4 h-4 text-green-600" />
+                                                <ArrowDownRight className="w-5 h-5" />
                                             ) : (
-                                                <ArrowUpRight className="w-4 h-4 text-red-600" />
+                                                <ArrowUpRight className="w-5 h-5" />
                                             )}
                                         </div>
                                         <div>
-                                            <p className="font-medium capitalize">{tx.type}</p>
-                                            <p className="text-sm text-gray-600">
+                                            <p className="font-medium text-blue-900 capitalize">{tx.type}</p>
+                                            <p className="text-sm text-blue-600">
                                                 {new Date(tx.timestamp).toLocaleString()}
                                             </p>
                                         </div>
                                     </div>
                                     <div className="text-right">
-                                        <p className="font-medium">{tx.amount} {tx.token}</p>
-                                        <p className="text-xs text-gray-500 font-mono">
+                                        <p className="font-medium text-blue-900">{tx.amount} {tx.token}</p>
+                                        <p className="text-xs text-blue-600 font-mono">
                                             {tx.txHash === "pending" ? "Pending..." : `${tx.txHash.slice(0, 8)}...${tx.txHash.slice(-8)}`}
                                         </p>
                                         {tx.snapshotRootHash && (
-                                            <Badge variant="secondary" className="mt-1">
+                                            <Badge variant="secondary" className="mt-1 bg-blue-100 text-blue-600 hover:bg-blue-200">
                                                 0G Snapshot
                                             </Badge>
                                         )}
@@ -596,9 +608,9 @@ export default function VaultInterface() {
 
             {/* Error Display */}
             {error && (
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="text-red-600">Transaction Error</CardTitle>
+                <Card className="border-none shadow-lg bg-red-50">
+                    <CardHeader className="space-y-1">
+                        <CardTitle className="text-2xl text-red-600">Transaction Error</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <p className="text-red-600">{error.message}</p>
@@ -607,4 +619,4 @@ export default function VaultInterface() {
             )}
         </div>
     )
-} 
+}
