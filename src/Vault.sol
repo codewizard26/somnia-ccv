@@ -21,27 +21,84 @@ contract Vault {
     receive() external payable {}
 
     function deposit() external payable {
-        // we need to use the amount of Eth the user has sent to the mint  tokens to the user.abi
-        require(msg.value > 0, "You need to send some Eth to deposit");
+        // Accept native 0G tokens (or any native token of the network)
+        require(
+            msg.value > 0,
+            "You need to send some native tokens to deposit"
+        );
         uint256 userInterestRate = i_rebaseToken.getInterestRate();
         i_rebaseToken.mint(msg.sender, msg.value, userInterestRate);
         emit Deposit(msg.sender, msg.value);
     }
 
-    function redeem(uint256 _amount) external {
-        if (_amount == type(uint256).max) {
-            _amount = i_rebaseToken.balanceOf(msg.sender);
+    function redeem(uint256 _rbtAmount) external {
+        if (_rbtAmount == type(uint256).max) {
+            _rbtAmount = i_rebaseToken.balanceOf(msg.sender);
         }
-        i_rebaseToken.burn(msg.sender, _amount);
-        (bool success, ) = payable(msg.sender).call{value: _amount}("");
+
+        // Get the user's RBT balance including accrued interest
+        uint256 userRBTBalance = i_rebaseToken.balanceOf(msg.sender);
+        require(_rbtAmount <= userRBTBalance, "Insufficient RBT balance");
+
+        // Get the user's principal balance (without interest)
+        uint256 userPrincipalBalance = i_rebaseToken.principalBalanceOf(
+            msg.sender
+        );
+
+        // Calculate the ratio of the user's principal to total principal
+        uint256 totalPrincipalSupply = i_rebaseToken.totalSupply();
+        uint256 vaultBalance = address(this).balance;
+
+        // Calculate how much 0G this user's principal represents
+        uint256 userShareOfVault = (userPrincipalBalance * vaultBalance) /
+            totalPrincipalSupply;
+
+        // Calculate the ratio of RBT being withdrawn to user's total RBT
+        uint256 withdrawalRatio = (_rbtAmount * 1e18) / userRBTBalance;
+
+        // Calculate the 0G amount to send based on the withdrawal ratio
+        uint256 ogAmountToSend = (userShareOfVault * withdrawalRatio) / 1e18;
+
+        // Burn the RBT tokens (this will automatically handle interest accrual)
+        i_rebaseToken.burn(msg.sender, _rbtAmount);
+
+        // Send the calculated 0G amount
+        (bool success, ) = payable(msg.sender).call{value: ogAmountToSend}("");
         if (!success) {
             revert VAULT__RedeemFailed();
         }
 
-        emit Redeem(msg.sender, _amount);
+        emit Redeem(msg.sender, ogAmountToSend);
     }
 
     function getRebaseTokenAddress() external view returns (address) {
         return address(i_rebaseToken);
+    }
+
+    // Helper function to calculate how much 0G you would get for your RBT
+    function calculateRedeemAmount(
+        uint256 _rbtAmount
+    ) external view returns (uint256) {
+        uint256 userRBTBalance = i_rebaseToken.balanceOf(msg.sender);
+        if (userRBTBalance == 0) return 0;
+
+        uint256 userPrincipalBalance = i_rebaseToken.principalBalanceOf(
+            msg.sender
+        );
+        uint256 totalPrincipalSupply = i_rebaseToken.totalSupply();
+        uint256 vaultBalance = address(this).balance;
+
+        if (totalPrincipalSupply == 0) return 0;
+
+        uint256 userShareOfVault = (userPrincipalBalance * vaultBalance) /
+            totalPrincipalSupply;
+        uint256 withdrawalRatio = (_rbtAmount * 1e18) / userRBTBalance;
+
+        return (userShareOfVault * withdrawalRatio) / 1e18;
+    }
+
+    // Function to get vault balance
+    function getVaultBalance() external view returns (uint256) {
+        return address(this).balance;
     }
 }
