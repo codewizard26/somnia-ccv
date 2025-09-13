@@ -2,10 +2,10 @@
 // Updated with deployed contract addresses
 
 export const CONTRACTS = {
-    // Deployed contract addresses on 0G Galileo Testnet
-    REBASE_TOKEN: "0xE4aD0ADAf7E5759569081dF90fC76381eD70A2B5",
-    POOL: "0x6c1FEDA3Ace971Ba274BC5b5622acC08Ad2A872C",
-    VAULT: "0x1a89Be0B6e08B8cF668B36c6F95f9781ABC917ba",
+    // Deployed contract addresses on Somnia Testnet
+    REBASE_TOKEN: "0x2432dC3847A04945FD80c0A81B4EbDB7C948D93f", // RebaseToken (SRBT)
+    POOL: "0x430EeeAE58193373241cb2eF0FDA3c97d6474e6e", // SimpleRebaseTokenPool
+    VAULT: "0x77A5840BBd508B36D49e038B908d62C994fF09fb", // Vault
 };
 
 export const NETWORKS = {
@@ -20,6 +20,17 @@ export const NETWORKS = {
             decimals: 18,
         },
     },
+    SOMNIA: {
+        id: 50312, // Somnia testnet chain ID
+        name: "Somnia Testnet",
+        rpcUrl: "https://dream-rpc.somnia.network",
+        blockExplorer: "https://somnia-testnet.socialscan.io",
+        nativeCurrency: {
+            name: "STT",
+            symbol: "STT",
+            decimals: 18,
+        },
+    },
 };
 
-export const CHAIN_ID = NETWORKS.GALILEO.id; 
+export const CHAIN_ID = NETWORKS.SOMNIA.id; 

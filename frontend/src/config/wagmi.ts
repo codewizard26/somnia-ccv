@@ -16,9 +16,23 @@ const galileoChain = {
     },
 } as const;
 
+const somniaChain = {
+    id: NETWORKS.SOMNIA.id,
+    name: NETWORKS.SOMNIA.name,
+    nativeCurrency: NETWORKS.SOMNIA.nativeCurrency,
+    rpcUrls: {
+        default: { http: [NETWORKS.SOMNIA.rpcUrl] },
+        public: { http: [NETWORKS.SOMNIA.rpcUrl] },
+    },
+    blockExplorers: {
+        default: { name: 'Somnia Explorer', url: NETWORKS.SOMNIA.blockExplorer },
+    },
+} as const;
+
 export const config = createConfig({
-    chains: [galileoChain, mainnet, sepolia], // 0G first, then others
+    chains: [somniaChain, galileoChain, mainnet, sepolia], // Somnia first for hackathon, then others
     transports: {
+        [somniaChain.id]: http(),
         [galileoChain.id]: http(),
         [mainnet.id]: http(),
         [sepolia.id]: http(),

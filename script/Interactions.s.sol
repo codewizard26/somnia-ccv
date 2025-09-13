@@ -13,7 +13,10 @@ contract DepositScript is Script {
      * @param vault The address of the vault contract.
      */
     function depositFunds(address vault) public payable {
-        Vault(payable(vault)).deposit{value: SEND_VALUE}();
+        Vault(payable(vault)).depositFor{value: SEND_VALUE}(
+            msg.sender,
+            SEND_VALUE
+        );
     }
 
     /**
@@ -28,7 +31,11 @@ contract DepositScript is Script {
 contract RedeemScript is Script {
     function redeemFunds(address vault) public {
         // Redeem from the vault
-        Vault(payable(vault)).redeem(type(uint256).max);
+        Vault(payable(vault)).redeemFor(
+            msg.sender,
+            type(uint256).max,
+            type(uint256).max
+        );
     }
 
     function run(address vault) external {

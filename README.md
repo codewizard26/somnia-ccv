@@ -1,6 +1,6 @@
-# 🌟 0G Smart Vault
+# 🌟 Somnia Smart Vault
 
-A decentralized interest-bearing vault built on the 0G network that allows users to deposit 0G tokens and earn interest through rebase token mechanics.
+A decentralized interest-bearing vault built on the Somnia network that allows users to deposit STT tokens and earn interest through rebase token mechanics.
 
 ## 🎉 Deployment Status
 
@@ -8,55 +8,51 @@ A decentralized interest-bearing vault built on the 0G network that allows users
 
 | Contract | Address | Status |
 |----------|---------|--------|
-| **RebaseToken** | `0xE4aD0ADAf7E5759569081dF90fC76381eD70A2B5` | ✅ Deployed |
-| **Pool** | `0x6c1FEDA3Ace971Ba274BC5b5622acC08Ad2A872C` | ✅ Deployed |
-| **Vault** | `0x1a89Be0B6e08B8cF668B36c6F95f9781ABC917ba` | ✅ Deployed |
+| **RebaseToken** | `0x2432dC3847A04945FD80c0A81B4EbDB7C948D93f` | 🔄 Ready to Deploy |
+| **Pool** | `0x430EeeAE58193373241cb2eF0FDA3c97d6474e6e` | 🔄 Ready to Deploy |
+| **Vault** | `0x77A5840BBd508B36D49e038B908d62C994fF09fb` | 🔄 Ready to Deploy |
 
 ### 🔧 Configuration
-- **Network:** 0G Galileo Testnet (Chain ID: 2131427466778448014)
-- **Router:** `0x5c21Bb4Bd151Bd6Fa2E6d7d1b63B83485529Cdb4`
-- **RNM Proxy:** `0x83eBE7Ceb4916C3Cb86662f65b353E4324390059`
-- **Link Token:** `0xd211Bd4ff8fd68C16016C5c7a66b6e10F6227C49`
+- **Network:** Somnia Testnet (Chain ID: 50312)
+- **RPC URL:** `https://dream-rpc.somnia.network`
+- **Block Explorer:** `https://somnia-testnet.socialscan.io`
+- **Native Currency:** STT (Somnia Test Token)
 
 ### ✅ Deployment Status
-- ✅ **Permissions:** All roles granted correctly
-- ✅ **Test Results:** Successful deposit of 0.1 0G tokens
-- ✅ **Frontend:** Contract addresses updated
-- ✅ **Network:** Proper chain detection & switching
+- 🔄 **Ready to Deploy:** Run `./deployToSomnia.sh` to deploy contracts
+- 🔄 **Permissions:** Will be granted during deployment
+- 🔄 **Test Results:** Test deposit will be performed during deployment
+- 🔄 **Frontend:** Contract addresses will be updated after deployment
 
 ## 🚀 Features
 
 ### Core Features
 1. **Interest-Bearing Vault**
-   - Deposit 0G tokens to earn interest
+   - Deposit STT tokens to earn interest
    - No lock-up periods for deposits/withdrawals
    - Automatic interest calculations
 
-2. **Rebase Token Mechanics**
+2. **Token Exchange Pool**
+   - Deposit native STT tokens to receive rebase tokens at a configurable exchange rate
+   - Withdraw STT by burning rebase tokens
+   - Stake rebase tokens to earn additional rewards
+   - Flexible staking and unstaking
+   - Exchange and reward rates configurable by owner
+
+3. **Rebase Token Mechanics**
    - Dynamic balance calculation
    - Automatic token rebasing
    - Interest accrual through rebasing
 
-3. **Advanced Security**
-   - Immutable snapshots on 0G Storage
+4. **Advanced Security**
+   - Role-based access control
    - Comprehensive audit trails
-   - Bank-grade security features
+   - Battle-tested smart contracts
 
-4. **AI-Powered Analytics**
-   - Real-time analytics dashboard
-   - Risk insights and monitoring
-   - Performance tracking
-   
-### Technical Implementation
-- **Snapshot System**
-  - JSON snapshots stored on 0G Storage
-  - Immutable proof generation
-  - Instant access to historical data
-
-- **Analytics Processing**
-  - Data aggregation via 0G Compute
-  - Real-time metrics calculation
-  - AI-powered risk assessment
+5. **Somnia Network Integration**
+   - High-performance blockchain infrastructure
+   - Low transaction costs
+   - Fast finality
 
 ## 📈 Development Roadmap
 
@@ -67,22 +63,15 @@ A decentralized interest-bearing vault built on the 0G network that allows users
 - [x] Network integration & switching
 - [x] MetaMask integration
 
-### Phase 2: 0G Storage Integration 🔄
-- [ ] Snapshot system implementation
-- [ ] IPFS/0G Storage integration
-- [ ] Historical data tracking
-- [ ] Proof generation system
-- [ ] Transaction history with proofs
-
-### Phase 3: Analytics Platform 🔮
-- [ ] 0G Compute integration
+### Phase 2: Enhanced Features 🔄
 - [ ] Advanced analytics dashboard
-- [ ] Performance metrics
+- [ ] Performance metrics tracking
+- [ ] Historical data visualization
 - [ ] Risk assessment system
-- [ ] AI-powered insights
+- [ ] Portfolio management tools
 
-### Phase 4: Advanced Features 🔮
-- [ ] Cross-chain integration (CCIP)
+### Phase 3: Advanced Features 🔮
+- [ ] Cross-chain integration
 - [ ] Multi-token support
 - [ ] Advanced governance features
 - [ ] Enhanced security features
@@ -102,25 +91,29 @@ A decentralized interest-bearing vault built on the 0G network that allows users
    npm run dev
    ```
 
-3. **Connect Wallet**
-   - Switch to 0G Galileo Testnet
-   - Use the provided faucet to get test tokens
+3. **Deploy Contracts**
+   - Set up your `.env` file with `PRIVATE_KEY` and `RPC_URL=https://dream-rpc.somnia.network`
+   - Run `./deployToSomnia.sh` to deploy contracts to Somnia Testnet
+   - Contract addresses will be automatically updated in the frontend
+
+4. **Connect Wallet**
+   - Switch to Somnia Testnet (Chain ID: 50312)
+   - Get test STT tokens from the Somnia faucet
    - Follow MetaMask setup guide in `METAMASK_SETUP_GUIDE.md`
 
 ## 📚 Documentation
 
 - [Setup Guide](SETUP_GUIDE.md)
 - [MetaMask Setup](frontend/METAMASK_SETUP_GUIDE.md)
-- [0G Connection Guide](frontend/0G_CONNECTION_GUIDE.md)
+- [Somnia Network Guide](https://docs.somnia.network)
 - [Vault Mechanics](VAULT_MECHANICS.md)
 - [Deployment Guide](DEPLOYMENT_SCRIPTS_GUIDE.md)
 
 ## 🔗 Links
 
-- [Documentation](https://docs.0g.ai)
-- [GitHub](https://github.com/0g-ai)
-- [Twitter](https://twitter.com/0g_protocol)
-- [Discord](https://discord.gg/0g)
+- [Somnia Documentation](https://docs.somnia.network)
+- [Somnia Network](https://somnia.network)
+- [Block Explorer](https://somnia-testnet.socialscan.io)
 
 ## 🏗 Project Structure
 

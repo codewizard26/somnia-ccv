@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "0G Rebase Token Vault",
-  description: "Earn interest on your 0G tokens with our innovative rebase vault system",
+  title: "Somnia Hackathon - Glacia Vault",
+  description: "Cross-chain DeFi vault built for Somnia Hackathon - Glacia Labs messaging with n8n automation",
 };
 
 export default function RootLayout({
