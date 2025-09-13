@@ -1,10 +1,11 @@
 "use client"
 
-import { useState } from "react"
-import { useAccount, useBalance, useChainId, useReadContract, useWriteContract, useSwitchChain } from "wagmi"
+import { useState, useEffect } from "react"
+import { useAccount, useBalance, useChainId, useReadContract, useWriteContract, useSwitchChain, useWaitForTransactionReceipt } from "wagmi"
 import { parseEther, formatEther } from "viem"
-import { ArrowUpRight, ArrowDownRight, Loader2, Database, Lock, Crown } from "lucide-react"
+import { ArrowUpRight, ArrowDownRight, Loader2, Database, Lock, Crown, History } from "lucide-react"
 import toast from "react-hot-toast"
+import { useRouter } from "next/navigation"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -34,13 +35,23 @@ export default function VaultInterface() {
     const chainId = useChainId()
     const { data: balance } = useBalance({ address })
     const { switchChain } = useSwitchChain()
+    const router = useRouter()
     const [activeTab, setActiveTab] = useState("deposit")
     const [amount, setAmount] = useState("")
     const [storeSnapshot, setStoreSnapshot] = useState(false)
     const [isLoading, setIsLoading] = useState(false)
     const [transactions, setTransactions] = useState<Transaction[]>([])
+    const [pendingDepositAmount, setPendingDepositAmount] = useState<string>("")
 
-    const { writeContract, isPending, error } = useWriteContract()
+    const { writeContract, isPending, error, data: txHash } = useWriteContract()
+
+    // Wait for transaction receipt to get confirmation
+    const { data: receipt, isLoading: isConfirming } = useWaitForTransactionReceipt({
+        hash: txHash,
+        query: {
+            enabled: !!txHash,
+        }
+    })
 
     // Read RBT balance directly from RebaseToken contract
     const { data: userRBTBalance, refetch: refetchRBTBalance } = useReadContract({
@@ -76,11 +87,91 @@ export default function VaultInterface() {
 
     const isCorrectNetwork = chainId === NETWORKS.SOMNIA.id
 
+    // Handle transaction confirmation and send n8n notification
+    useEffect(() => {
+        if (receipt && txHash && address && pendingDepositAmount) {
+            // Transaction confirmed, store in database and send n8n notification
+            storeDepositInDatabase(address, txHash, pendingDepositAmount)
+            sendN8nNotification(address, txHash)
+
+            // Clear pending deposit amount
+            setPendingDepositAmount("")
+
+            // Refetch balances
+            setTimeout(() => {
+                refetchRBTBalance()
+                refetchVaultBalance()
+                refetchTotalSupply()
+                refetchPoolBalance()
+            }, 1000)
+        }
+    }, [receipt, txHash, address, pendingDepositAmount])
+
     const handleSwitchToSomnia = async () => {
         try {
             await switchChain({ chainId: NETWORKS.SOMNIA.id })
         } catch (error) {
             console.error('Failed to switch chain:', error)
+        }
+    }
+
+    const storeDepositInDatabase = async (walletAddress: string, txHash: string, depositAmount: string) => {
+        try {
+            const response = await fetch("/api/deposit", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    user: walletAddress,
+                    amount: parseFloat(depositAmount),
+                    txHash: txHash
+                })
+            })
+
+            const data = await response.json()
+            if (data.success) {
+                console.log("Deposit stored in database successfully")
+                toast.success("Deposit recorded in database!")
+            } else {
+                console.error("Failed to store deposit:", data.error)
+                toast.error("Failed to record deposit: " + data.error)
+            }
+        } catch (error) {
+            console.error("Error storing deposit:", error)
+            toast.error("Error recording deposit")
+        }
+    }
+
+    const sendN8nNotification = async (walletAddress: string, txHash: string) => {
+        try {
+            const webhookUrl = "https://codewizard26.app.n8n.cloud/webhook/99326cbb-87a4-4df3-924f-bae934de441e"
+            const payload = {
+                test: "Deposit notification from Somnia Vault",
+                wallet_address: walletAddress,
+                hash: txHash,
+                amount: amount,
+                token: "STT",
+                timestamp: new Date().toISOString(),
+                blockExplorer: `${NETWORKS.SOMNIA.blockExplorer}/tx/${txHash}`
+            }
+
+            const response = await fetch(webhookUrl, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(payload),
+            })
+
+            if (response.ok) {
+                console.log("n8n notification sent successfully")
+                toast.success("Telegram notification sent!")
+            } else {
+                console.error("Failed to send n8n notification:", response.statusText)
+                toast.error("Failed to send notification")
+            }
+        } catch (error) {
+            console.error("Error sending n8n notification:", error)
+            toast.error("Error sending notification")
         }
     }
 
@@ -101,6 +192,10 @@ export default function VaultInterface() {
             const loadingToast = toast.loading("Transaction sent...")
             const amountInWei = parseEther(amount)
 
+            // Store the deposit amount for later use when transaction is confirmed
+            setPendingDepositAmount(amount)
+
+            // Execute the deposit transaction
             writeContract({
                 address: CONTRACTS.POOL as `0x${string}`,
                 abi: SimpleRebaseTokenPoolABI,
@@ -108,11 +203,14 @@ export default function VaultInterface() {
                 value: amountInWei,
             })
 
+            toast.dismiss(loadingToast)
+            toast.success("Transaction sent! Waiting for confirmation...")
+
             // Send Glacia Labs message
             if (storeSnapshot) {
                 try {
                     const messageData = {
-                        txHash: "pending", // Will be updated when transaction is confirmed
+                        txHash: "pending",
                         chainUid: chainId,
                         amount: parseFloat(amount),
                         token: "STT",
@@ -151,17 +249,7 @@ export default function VaultInterface() {
                 }
             }
 
-            toast.dismiss(loadingToast)
-            toast.success("Transaction confirmed!")
             setAmount("")
-
-            // Refetch balances after successful deposit
-            setTimeout(() => {
-                refetchRBTBalance()
-                refetchVaultBalance()
-                refetchTotalSupply()
-                refetchPoolBalance()
-            }, 2000)
 
         } catch (error) {
             console.error('Deposit error:', error)
@@ -338,8 +426,20 @@ export default function VaultInterface() {
             {/* Deposit/Withdraw Interface - Moved to top */}
             <Card className="border-none shadow-lg bg-gradient-to-br from-white to-purple-50">
                 <CardHeader className="space-y-1">
-                    <CardTitle className="text-3xl font-bold text-purple-900 text-left">Vault Operations</CardTitle>
-                    <CardDescription className="text-purple-600 text-left text-lg">Deposit or withdraw tokens from the vault</CardDescription>
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <CardTitle className="text-3xl font-bold text-purple-900 text-left">Vault Operations</CardTitle>
+                            <CardDescription className="text-purple-600 text-left text-lg">Deposit or withdraw tokens from the vault</CardDescription>
+                        </div>
+                        <Button
+                            onClick={() => router.push('/dashboard/history')}
+                            variant="outline"
+                            className="flex items-center space-x-2 border-purple-200 text-purple-600 hover:bg-purple-50"
+                        >
+                            <History className="w-4 h-4" />
+                            <span>View History</span>
+                        </Button>
+                    </div>
                 </CardHeader>
                 <CardContent>
                     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -414,13 +514,18 @@ export default function VaultInterface() {
 
                                 <Button
                                     onClick={handleDeposit}
-                                    disabled={isLoading || isPending || !amount || parseFloat(amount) <= 0}
+                                    disabled={isLoading || isPending || isConfirming || !amount || parseFloat(amount) <= 0}
                                     className="w-full bg-purple-600 hover:bg-purple-700 text-white rounded-xl py-7 text-lg transition-all"
                                 >
                                     {isLoading || isPending ? (
                                         <>
                                             <Loader2 className="w-6 h-6 mr-2 animate-spin" />
                                             <span className="text-lg">Processing...</span>
+                                        </>
+                                    ) : isConfirming ? (
+                                        <>
+                                            <Loader2 className="w-6 h-6 mr-2 animate-spin" />
+                                            <span className="text-lg">Confirming...</span>
                                         </>
                                     ) : (
                                         <>

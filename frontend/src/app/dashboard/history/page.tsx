@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import React, { useState } from "react"
 import {
   ArrowUpRight,
   ArrowDownRight,
@@ -10,7 +10,8 @@ import {
   XCircle,
   Eye,
   Database,
-  Loader2
+  Loader2,
+  ExternalLink
 } from "lucide-react"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -18,6 +19,10 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 
 import { SnapshotModal } from "@/components/SnapshotModal"
+import { useVaultEvents, VaultEvent } from "@/hooks/useVaultEvents"
+import { useDeposits, DatabaseDeposit } from "@/hooks/useDeposits"
+import { useAccount } from "wagmi"
+import { NETWORKS } from "@/config/contracts"
 
 interface Transaction {
   id: string
@@ -38,63 +43,50 @@ interface Transaction {
   }
 }
 
-// Mock data - replace with actual data from your backend
-const mockTransactions: Transaction[] = [
-  {
-    id: "1",
-    type: "deposit",
-    amount: "0.5",
-    token: "0G",
-    value: "$1,234.56",
-    status: "completed",
-    timestamp: "2 hours ago",
-    hash: "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
-    snapshotRootHash: "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
-    snapshotData: {
-      txHash: "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
-      chainUid: 16601,
-      amount: 0.5,
-      token: "0G",
-      timestamp: "2024-01-15T10:30:00Z",
-      userAddress: "0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6"
-    }
-  },
-  {
-    id: "2",
-    type: "interest",
-    amount: "0.01",
-    token: "0G",
-    value: "$24.68",
-    status: "completed",
-    timestamp: "1 day ago",
-    hash: "0x876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba",
-    snapshotRootHash: "0xfedcba0987654321fedcba0987654321fedcba0987654321fedcba0987654321",
-    snapshotData: {
-      txHash: "0x876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba",
-      chainUid: 16601,
-      amount: 0.01,
-      token: "0G",
-      timestamp: "2024-01-14T15:45:00Z",
-      userAddress: "0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6"
-    }
-  },
-  {
-    id: "3",
-    type: "withdraw",
-    amount: "0.1",
-    token: "0G",
-    value: "$246.80",
-    status: "pending",
-    timestamp: "3 days ago",
-    hash: "0xabcd1234ef567890abcd1234ef567890abcd1234ef567890abcd1234ef567890"
-  }
-]
 
 export default function HistoryPage() {
-  const [transactions, setTransactions] = useState<Transaction[]>(mockTransactions)
+  const { address } = useAccount()
+  const { events: vaultEvents, isLoading: isLoadingEvents, error: eventsError, hasMoreEvents, oldestBlock } = useVaultEvents()
+  const { deposits: dbDeposits, isLoading: isLoadingDeposits, error: depositsError, refetch: refetchDeposits } = useDeposits()
   const [filterType, setFilterType] = useState("all")
   const [filterStatus, setFilterStatus] = useState("all")
   const [loadingSnapshot, setLoadingSnapshot] = useState<string | null>(null)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage] = useState(10)
+
+  // Transform vault events to match the existing Transaction interface
+  const vaultTransactions: Transaction[] = vaultEvents.map((event: VaultEvent) => ({
+    id: event.id,
+    type: event.type === 'redeem' ? 'withdraw' : event.type,
+    amount: event.type === 'deposit' ? event.sttAmount : event.rebaseTokenAmount,
+    token: event.type === 'deposit' ? 'STT' : 'RBT',
+    value: `$${(parseFloat(event.type === 'deposit' ? event.sttAmount : event.rebaseTokenAmount) * 1000).toFixed(2)}`, // Mock USD value
+    status: 'completed' as const,
+    timestamp: new Date(event.timestamp * 1000).toLocaleString(),
+    hash: event.transactionHash,
+    snapshotRootHash: undefined, // No snapshot data from contract events
+    snapshotData: undefined
+  }))
+
+  // Transform database deposits to match the existing Transaction interface
+  const dbTransactions: Transaction[] = dbDeposits.map((deposit: DatabaseDeposit) => ({
+    id: `db-${deposit.id}`,
+    type: 'deposit' as const,
+    amount: deposit.amount.toString(),
+    token: 'STT',
+    value: `$${(deposit.amount * 1000).toFixed(2)}`, // Mock USD value
+    status: 'completed' as const,
+    timestamp: new Date(deposit.created_at).toLocaleString(),
+    hash: deposit.tx_hash,
+    snapshotRootHash: undefined,
+    snapshotData: undefined
+  }))
+
+  // Combine and sort all transactions
+  const allTransactions = [...vaultTransactions, ...dbTransactions]
+    .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+
+  const transactions = allTransactions
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -122,26 +114,7 @@ export default function HistoryPage() {
     }
   }
 
-  const fetchSnapshot = async (rootHash: string, txId: string) => {
-    setLoadingSnapshot(txId)
-    try {
-      // Mock API call to fetch snapshot from 0G
-      const response = await fetch(`/api/fetch-snapshot?rootHash=${rootHash}`)
-      if (response.ok) {
-        const data = await response.json()
-        // Update transaction with snapshot data
-        setTransactions(prev => prev.map(tx =>
-          tx.id === txId ? { ...tx, snapshotData: data } : tx
-        ))
-      } else {
-        throw new Error("Failed to fetch snapshot")
-      }
-    } catch (error) {
-      console.error("Error fetching snapshot:", error)
-    } finally {
-      setLoadingSnapshot(null)
-    }
-  }
+
 
   const filteredTransactions = transactions.filter(tx => {
     const typeMatch = filterType === "all" || tx.type === filterType
@@ -149,14 +122,44 @@ export default function HistoryPage() {
     return typeMatch && statusMatch
   })
 
+  // Reset pagination when filters change
+  React.useEffect(() => {
+    setCurrentPage(1)
+  }, [filterType, filterStatus])
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredTransactions.length / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const paginatedTransactions = filteredTransactions.slice(startIndex, endIndex)
+
+  const formatTimeAgo = (timestamp: string) => {
+    const now = new Date()
+    const txTime = new Date(timestamp)
+    const diffInSeconds = Math.floor((now.getTime() - txTime.getTime()) / 1000)
+
+    if (diffInSeconds < 60) return `${diffInSeconds} seconds ago`
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`
+    return `${Math.floor(diffInSeconds / 86400)} days ago`
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Transaction History</h1>
         <p className="text-gray-600 mt-2">
-          View all your vault transactions and activity
+          View all vault transactions and activity from the blockchain
         </p>
+        {(eventsError || depositsError) && (
+          <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-red-600 text-sm">
+              {eventsError && `Error loading events: ${eventsError.message}`}
+              {depositsError && `Error loading deposits: ${depositsError.message}`}
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Filters */}
@@ -204,20 +207,49 @@ export default function HistoryPage() {
       {/* Transactions List */}
       <Card>
         <CardHeader>
-          <CardTitle>Recent Transactions</CardTitle>
-          <CardDescription>
-            {filteredTransactions.length} transaction{filteredTransactions.length !== 1 ? 's' : ''} found
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Transaction History</CardTitle>
+              <CardDescription>
+                {filteredTransactions.length} transaction{filteredTransactions.length !== 1 ? 's' : ''} found
+                {totalPages > 1 && ` • Page ${currentPage} of ${totalPages}`}
+                <br />
+                <span className="text-xs text-gray-500">
+                  Showing events from the last 500 blocks (RPC limitation)
+                </span>
+              </CardDescription>
+            </div>
+            <Button
+              onClick={() => {
+                refetchDeposits()
+                // Note: vault events will auto-refresh when component re-mounts
+              }}
+              variant="outline"
+              size="sm"
+              disabled={isLoadingEvents || isLoadingDeposits}
+            >
+              <Database className="w-4 h-4 mr-2" />
+              Refresh
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {filteredTransactions.length === 0 ? (
+            {(isLoadingEvents || isLoadingDeposits) ? (
+              <div className="text-center py-8">
+                <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-purple-600" />
+                <p className="text-gray-500">Loading transaction history...</p>
+              </div>
+            ) : filteredTransactions.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
-                No transactions found matching your filters
+                {transactions.length === 0
+                  ? "No transactions found on the blockchain yet"
+                  : "No transactions found matching your filters"
+                }
               </div>
             ) : (
-              filteredTransactions.map((tx) => (
-                <div key={tx.id} className="border border-gray-200 rounded-lg p-4">
+              paginatedTransactions.map((tx) => (
+                <div key={tx.id} className="border border-gray-200 rounded-lg p-4 hover:border-purple-200 transition-colors">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
                       <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
@@ -235,12 +267,22 @@ export default function HistoryPage() {
                             </Badge>
                           )}
                         </div>
-                        <p className="text-sm text-gray-600">{tx.timestamp}</p>
-                        <p className="text-xs text-gray-500 font-mono">{tx.hash}</p>
+                        <p className="text-sm text-gray-600">{formatTimeAgo(tx.timestamp)}</p>
+                        <div className="flex items-center space-x-2">
+                          <p className="text-xs text-gray-500 font-mono">{tx.hash.slice(0, 8)}...{tx.hash.slice(-8)}</p>
+                          <a
+                            href={`${NETWORKS.SOMNIA.blockExplorer}/tx/${tx.hash}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-purple-600 hover:text-purple-700"
+                          >
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                        </div>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="font-medium text-gray-900">{tx.amount} {tx.token}</p>
+                      <p className="font-medium text-gray-900">{parseFloat(tx.amount).toFixed(6)} {tx.token}</p>
                       <p className="text-sm text-gray-600">{tx.value}</p>
                       <div className="flex items-center justify-end mt-1">
                         {getStatusIcon(tx.status)}
@@ -252,55 +294,67 @@ export default function HistoryPage() {
                   </div>
 
                   {/* Snapshot Actions */}
-                  {tx.snapshotRootHash && (
-                    <div className="mt-3 pt-3 border-t border-gray-100">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2 text-sm text-gray-600">
-                          <Database className="w-4 h-4" />
-                          <span>Snapshot stored on 0G</span>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          {!tx.snapshotData && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => fetchSnapshot(tx.snapshotRootHash!, tx.id)}
-                              disabled={loadingSnapshot === tx.id}
-                            >
-                              {loadingSnapshot === tx.id ? (
-                                <>
-                                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                  Loading...
-                                </>
-                              ) : (
-                                <>
-                                  <Eye className="w-4 h-4 mr-2" />
-                                  Fetch Snapshot
-                                </>
-                              )}
-                            </Button>
-                          )}
-                          {tx.snapshotData && (
-                            <SnapshotModal
-                              trigger={
-                                <Button variant="outline" size="sm">
-                                  <Eye className="w-4 h-4 mr-2" />
-                                  View Snapshot
-                                </Button>
-                              }
-                              title={`Snapshot for ${tx.type} transaction`}
-                              data={tx.snapshotData}
-                              rootHash={tx.snapshotRootHash}
-                            />
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  )}
+
                 </div>
               ))
             )}
           </div>
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200">
+              <div className="text-sm text-gray-600">
+                Showing {startIndex + 1} to {Math.min(endIndex, filteredTransactions.length)} of {filteredTransactions.length} transactions
+              </div>
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                >
+                  Previous
+                </Button>
+                <div className="flex items-center space-x-1">
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    const pageNum = i + 1
+                    return (
+                      <Button
+                        key={pageNum}
+                        variant={currentPage === pageNum ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setCurrentPage(pageNum)}
+                        className={currentPage === pageNum ? "bg-purple-600 hover:bg-purple-700" : ""}
+                      >
+                        {pageNum}
+                      </Button>
+                    )
+                  })}
+                  {totalPages > 5 && (
+                    <>
+                      <span className="text-gray-400">...</span>
+                      <Button
+                        variant={currentPage === totalPages ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setCurrentPage(totalPages)}
+                        className={currentPage === totalPages ? "bg-purple-600 hover:bg-purple-700" : ""}
+                      >
+                        {totalPages}
+                      </Button>
+                    </>
+                  )}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
