@@ -10,6 +10,7 @@
     "generate-abis": "cd .. && ./generate-abis.sh"
   },
   "dependencies": {
+    "@neondatabase/serverless": "^0.10.4",
     "@radix-ui/react-avatar": "^1.1.10",
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-dropdown-menu": "^2.1.16",
