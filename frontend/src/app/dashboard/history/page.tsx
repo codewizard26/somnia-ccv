@@ -8,7 +8,6 @@ import {
   Clock,
   CheckCircle,
   XCircle,
-  Eye,
   Database,
   Loader2,
   ExternalLink
@@ -18,7 +17,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 
-import { SnapshotModal } from "@/components/SnapshotModal"
+// import { SnapshotModal } from "@/components/SnapshotModal"
 import { useVaultEvents, VaultEvent } from "@/hooks/useVaultEvents"
 import { useDeposits, DatabaseDeposit } from "@/hooks/useDeposits"
 import { useAccount } from "wagmi"

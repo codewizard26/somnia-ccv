@@ -1,4 +1,5 @@
 import { useReadContract, useWriteContract } from 'wagmi';
+import type { Abi } from 'viem';
 import { CONTRACTS } from '@/config/contracts';
 import RebaseTokenABI from '@/contracts/RebaseToken.json';
 import VaultABI from '@/contracts/Vault.json';
@@ -8,7 +9,7 @@ import PoolABI from '@/contracts/RebaseTokenPool.json';
 export const useVaultBalance = (address?: string) => {
     return useReadContract({
         address: CONTRACTS.VAULT as `0x${string}`,
-        abi: VaultABI.abi,
+        abi: VaultABI as unknown as Abi,
         functionName: 'balanceOf',
         args: address ? [address] : undefined,
         query: {
@@ -29,7 +30,7 @@ export const useVaultWithdraw = () => {
 export const useRebaseTokenBalance = (address?: string) => {
     return useReadContract({
         address: CONTRACTS.REBASE_TOKEN as `0x${string}`,
-        abi: RebaseTokenABI.abi,
+        abi: RebaseTokenABI as unknown as Abi,
         functionName: 'balanceOf',
         args: address ? [address] : undefined,
         query: {
@@ -41,7 +42,7 @@ export const useRebaseTokenBalance = (address?: string) => {
 export const useRebaseTokenTotalSupply = () => {
     return useReadContract({
         address: CONTRACTS.REBASE_TOKEN as `0x${string}`,
-        abi: RebaseTokenABI.abi,
+        abi: RebaseTokenABI as unknown as Abi,
         functionName: 'totalSupply',
     });
 };
@@ -54,7 +55,7 @@ export const useRebaseTokenTransfer = () => {
 export const usePoolBalance = (address?: string) => {
     return useReadContract({
         address: CONTRACTS.POOL as `0x${string}`,
-        abi: PoolABI.abi,
+        abi: (PoolABI as { abi: Abi }).abi,
         functionName: 'balanceOf',
         args: address ? [address] : undefined,
         query: {

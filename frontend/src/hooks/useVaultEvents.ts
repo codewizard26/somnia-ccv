@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import { usePublicClient, useAccount } from 'wagmi'
 import { formatEther } from 'viem'
 import { CONTRACTS } from '@/config/contracts'
-import VaultABI from '@/contracts/Vault.json'
 
 export interface VaultEvent {
     id: string
@@ -15,12 +14,24 @@ export interface VaultEvent {
     timestamp: number
 }
 
+type RawLog = {
+    blockNumber: bigint
+    transactionHash: `0x${string}`
+    logIndex: number
+    args: {
+        user: string
+        sttAmount: bigint
+        rebaseTokenAmount: bigint
+        [key: string]: unknown
+    }
+}
+
 export function useVaultEvents(fromBlock?: bigint, toBlock?: bigint) {
     const [events, setEvents] = useState<VaultEvent[]>([])
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState<Error | null>(null)
-    const [hasMoreEvents, setHasMoreEvents] = useState(true)
-    const [oldestBlock, setOldestBlock] = useState<bigint | null>(null)
+    const [hasMoreEvents] = useState(true)
+    const [oldestBlock] = useState<bigint | null>(null)
     const publicClient = usePublicClient()
     const { address } = useAccount()
 
@@ -44,10 +55,13 @@ export function useVaultEvents(fromBlock?: bigint, toBlock?: bigint) {
                 console.log(`Fetching events from block ${startBlock} to ${endBlock}`)
 
                 // Helper function to fetch events with chunking if needed
-                const fetchEventsWithChunking = async (eventName: string, eventInputs: any[]) => {
+                const fetchEventsWithChunking = async (
+                    eventName: 'Deposit' | 'Redeem',
+                    eventInputs: { name: string; type: 'address' | 'uint256'; indexed: boolean }[]
+                ): Promise<RawLog[]> => {
                     try {
                         // Try to fetch all events at once first
-                        return await publicClient.getLogs({
+                        return await (publicClient.getLogs({
                             address: CONTRACTS.VAULT as `0x${string}`,
                             event: {
                                 type: 'event',
@@ -56,18 +70,19 @@ export function useVaultEvents(fromBlock?: bigint, toBlock?: bigint) {
                             },
                             fromBlock: startBlock,
                             toBlock: endBlock
-                        })
-                    } catch (error: any) {
+                        }) as unknown as RawLog[])
+                    } catch (error: unknown) {
                         // If the range is too large, try fetching in smaller chunks
-                        if (error.message?.includes('block range exceeds') || error.message?.includes('1000')) {
+                        const err = error as { message?: string }
+                        if (err.message?.includes('block range exceeds') || err.message?.includes('1000')) {
                             console.log(`Block range too large, fetching ${eventName} events in chunks...`)
                             const chunkSize = BigInt(500) // Smaller chunk size
-                            const allLogs: any[] = []
+                            const allLogs: RawLog[] = []
 
                             for (let block = startBlock; block <= endBlock; block += chunkSize) {
                                 const chunkEnd = block + chunkSize > endBlock ? endBlock : block + chunkSize
                                 try {
-                                    const chunkLogs = await publicClient.getLogs({
+                                    const chunkLogs = await (publicClient.getLogs({
                                         address: CONTRACTS.VAULT as `0x${string}`,
                                         event: {
                                             type: 'event',
@@ -76,7 +91,7 @@ export function useVaultEvents(fromBlock?: bigint, toBlock?: bigint) {
                                         },
                                         fromBlock: block,
                                         toBlock: chunkEnd
-                                    })
+                                    }) as unknown as RawLog[])
                                     allLogs.push(...chunkLogs)
                                 } catch (chunkError) {
                                     console.warn(`Failed to fetch chunk from ${block} to ${chunkEnd}:`, chunkError)
@@ -106,7 +121,7 @@ export function useVaultEvents(fromBlock?: bigint, toBlock?: bigint) {
                 const transformedEvents: VaultEvent[] = []
 
                 // Process deposit events
-                for (const log of depositLogs) {
+                for (const log of depositLogs as RawLog[]) {
                     const block = await publicClient.getBlock({ blockNumber: log.blockNumber })
                     transformedEvents.push({
                         id: `${log.transactionHash}-${log.logIndex}`,
@@ -121,7 +136,7 @@ export function useVaultEvents(fromBlock?: bigint, toBlock?: bigint) {
                 }
 
                 // Process redeem events
-                for (const log of redeemLogs) {
+                for (const log of redeemLogs as RawLog[]) {
                     const block = await publicClient.getBlock({ blockNumber: log.blockNumber })
                     transformedEvents.push({
                         id: `${log.transactionHash}-${log.logIndex}`,

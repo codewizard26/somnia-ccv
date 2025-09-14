@@ -2,7 +2,7 @@
 
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useRouter } from 'next/navigation';
-import { Database, Cpu, Shield, ArrowRight, ExternalLink, Link, Coins, BarChart3, Timer, GitMerge } from 'lucide-react';
+import { Database, Cpu, ArrowRight, ExternalLink, Link, Coins, BarChart3, Timer, GitMerge } from 'lucide-react';
 
 export default function Home() {
   const router = useRouter();
