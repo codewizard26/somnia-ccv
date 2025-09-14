@@ -78,7 +78,7 @@ export default function TokenInfo() {
                     </div>
                     <div className="flex items-center space-x-2">
                         <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                        <span className="text-sm text-gray-600">Built on 0G network</span>
+                        <span className="text-sm text-gray-600">Built on Somnia testnet</span>
                     </div>
                 </div>
             </div>
@@ -87,9 +87,9 @@ export default function TokenInfo() {
             <div className="bg-blue-50 rounded-lg p-4">
                 <h4 className="font-medium text-blue-800 mb-2">Network Information</h4>
                 <div className="text-sm text-blue-700 space-y-1">
-                    <div>Network: 0G Galileo Testnet</div>
-                    <div>Chain ID: 2131427466778448014</div>
-                    <div>Currency: 0G</div>
+                    <div>Network: Somnia Testnet</div>
+                    <div>Chain ID: 50312</div>
+                    <div>Currency: STT</div>
                 </div>
             </div>
         </div>

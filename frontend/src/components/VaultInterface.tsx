@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useAccount, useBalance, useChainId, useReadContract, useWriteContract, useSwitchChain, useWaitForTransactionReceipt } from "wagmi"
 import { parseEther, formatEther } from "viem"
-import { ArrowUpRight, ArrowDownRight, Loader2, Database, Lock, Crown, History } from "lucide-react"
+import { ArrowUpRight, ArrowDownRight, Loader2, Database, Crown, History } from "lucide-react"
 import toast from "react-hot-toast"
 import { useRouter } from "next/navigation"
 
@@ -78,12 +78,7 @@ export default function VaultInterface() {
         functionName: 'totalSupply',
     })
 
-    // Read pool balance (to detect stuck funds)
-    const { data: poolBalance, refetch: refetchPoolBalance } = useReadContract({
-        address: CONTRACTS.POOL as `0x${string}`,
-        abi: SimpleRebaseTokenPoolABI,
-        functionName: 'getPoolBalance',
-    })
+    // (Removed) Pool balance check UI and rescue actions
 
     const isCorrectNetwork = chainId === NETWORKS.SOMNIA.id
 
@@ -102,7 +97,6 @@ export default function VaultInterface() {
                 refetchRBTBalance()
                 refetchVaultBalance()
                 refetchTotalSupply()
-                refetchPoolBalance()
             }, 1000)
         }
     }, [receipt, txHash, address, pendingDepositAmount])
@@ -335,7 +329,6 @@ export default function VaultInterface() {
                 refetchRBTBalance()
                 refetchVaultBalance()
                 refetchTotalSupply()
-                refetchPoolBalance()
             }, 2000)
 
         } catch (error) {
@@ -358,38 +351,7 @@ export default function VaultInterface() {
         }
     }
 
-    const handleRescueStuckFunds = async () => {
-        if (!poolBalance || (poolBalance as bigint) === BigInt(0)) {
-            toast.error('No stuck funds to rescue')
-            return
-        }
-
-        setIsLoading(true)
-        try {
-            const loadingToast = toast.loading("Rescuing stuck funds...")
-
-            writeContract({
-                address: CONTRACTS.POOL as `0x${string}`,
-                abi: SimpleRebaseTokenPoolABI,
-                functionName: 'rescueStuckSTT',
-            })
-
-            toast.dismiss(loadingToast)
-            toast.success("Stuck funds rescued successfully!")
-
-            // Refetch balances
-            setTimeout(() => {
-                refetchVaultBalance()
-                refetchPoolBalance()
-            }, 2000)
-
-        } catch (error) {
-            console.error('Rescue error:', error)
-            toast.error('Rescue failed. Please try again.')
-        } finally {
-            setIsLoading(false)
-        }
-    }
+    // (Removed) Rescue stuck funds action and UI
 
     if (!isConnected) {
         return (
@@ -654,28 +616,7 @@ export default function VaultInterface() {
                                 {rbtTotalSupply ? `${parseFloat(formatEther(rbtTotalSupply as bigint)).toFixed(6)} RBT` : "0.000000 RBT"}
                             </p>
                         </div>
-                        <div className={`p-4 rounded-xl shadow-sm border ${poolBalance && (poolBalance as bigint) > BigInt(0) ? 'bg-red-50 border-red-200' : 'bg-white border-purple-100'}`}>
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm text-purple-600 mb-2 text-left">Pool Balance</p>
-                                    <p className="text-2xl font-bold text-purple-900 text-left">
-                                        {poolBalance ? `${parseFloat(formatEther(poolBalance as bigint)).toFixed(6)} STT` : "0.000000 STT"}
-                                    </p>
-                                    {poolBalance && (poolBalance as bigint) > BigInt(0) ? (
-                                        <p className="text-xs text-red-600 mt-1">⚠️ Stuck funds detected</p>
-                                    ) : null}
-                                </div>
-                                {poolBalance && (poolBalance as bigint) > BigInt(0) ? (
-                                    <Button
-                                        onClick={handleRescueStuckFunds}
-                                        disabled={isLoading || isPending}
-                                        className="bg-red-600 hover:bg-red-700 text-white text-sm px-3 py-1"
-                                    >
-                                        Rescue
-                                    </Button>
-                                ) : null}
-                            </div>
-                        </div>
+                        {/* Pool balance card removed */}
                     </CardContent>
                 </Card>
             </div>

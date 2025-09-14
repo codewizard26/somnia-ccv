@@ -61,7 +61,7 @@ export default function NetworkDebug() {
                 <div className="flex justify-between items-center">
                     <span className="text-gray-300">Network Name:</span>
                     <span className="font-medium text-purple-400">
-                        {chainId === NETWORKS.GALILEO.id ? '0G Galileo Testnet' : 'Unknown Network'}
+                        {chainId === NETWORKS.GALILEO.id ? 'Galileo Testnet' : 'Unknown Network'}
                     </span>
                 </div>
             </div>

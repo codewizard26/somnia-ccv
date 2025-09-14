@@ -24,7 +24,7 @@ export const NETWORKS = {
         id: 50312, // Somnia testnet chain ID
         name: "Somnia Testnet",
         rpcUrl: "https://dream-rpc.somnia.network",
-        blockExplorer: "https://somnia-testnet.socialscan.io",
+        blockExplorer: "https://shannon-explorer.somnia.network",
         nativeCurrency: {
             name: "STT",
             symbol: "STT",

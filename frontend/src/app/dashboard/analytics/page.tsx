@@ -32,6 +32,7 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card"
+import VaultAIChat from "@/components/dashboard/VaultAIChat"
 import { Button } from "@/components/ui/button"
 
 // ---------------- Mock Data ----------------
@@ -82,6 +83,53 @@ export default function AnalyticsPage() {
 
     return (
         <div className="p-6 space-y-6">
+            {/* ---- Vault AI Assistant (Full Width, Top) ---- */}
+            <VaultAIChat />
+            {/* ---- Risk / Behavior Insights ---- */}
+            <Card>
+                <CardHeader>
+                    <CardTitle>AI Risk Insights</CardTitle>
+                    <CardDescription>AI-generated insights</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="space-y-4">
+                        {[
+                            {
+                                message: "Unusual large withdrawal detected in last 24h",
+                                type: "warning",
+                            },
+                            {
+                                message: "TVL grew by 15% this week due to 3 new large depositors",
+                                type: "info",
+                            },
+                            {
+                                message: "Vault is 80% concentrated in top 5 addresses",
+                                type: "alert",
+                            },
+                        ].map((insight, index) => (
+                            <div
+                                key={index}
+                                className={`flex items-start space-x-4 p-4 rounded-lg ${insight.type === "warning"
+                                    ? "bg-yellow-50"
+                                    : insight.type === "alert"
+                                        ? "bg-red-50"
+                                        : "bg-blue-50"
+                                    }`}
+                            >
+                                <AlertCircle
+                                    className={`w-5 h-5 mt-0.5 ${insight.type === "warning"
+                                        ? "text-yellow-600"
+                                        : insight.type === "alert"
+                                            ? "text-red-600"
+                                            : "text-blue-600"
+                                        }`}
+                                />
+                                <p className="text-sm">{insight.message}</p>
+                            </div>
+                        ))}
+                    </div>
+                </CardContent>
+            </Card>
             {/* ---- Info Note ---- */}
             <Card className="border-blue-200 bg-blue-50">
                 <CardContent className="p-4">
@@ -90,7 +138,7 @@ export default function AnalyticsPage() {
                         <div>
                             <p className="text-sm font-medium text-blue-900">Demo Data</p>
                             <p className="text-sm text-blue-700">
-                                The analytics shown here are using mock data for demonstration. Live data will be integrated once the 0G storage layer is connected.
+                                The analytics shown here are using mock data for demonstration. Live data will be integrated once the neon database has sufficient data.
                             </p>
                         </div>
                     </div>
@@ -292,51 +340,7 @@ export default function AnalyticsPage() {
                 </CardContent>
             </Card>
 
-            {/* ---- Risk / Behavior Insights ---- */}
-            <Card>
-                <CardHeader>
-                    <CardTitle>AI Risk Insights</CardTitle>
-                    <CardDescription>Powered by 0G Compute</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <div className="space-y-4">
-                        {[
-                            {
-                                message: "Unusual large withdrawal detected in last 24h",
-                                type: "warning",
-                            },
-                            {
-                                message: "TVL grew by 15% this week due to 3 new large depositors",
-                                type: "info",
-                            },
-                            {
-                                message: "Vault is 80% concentrated in top 5 addresses",
-                                type: "alert",
-                            },
-                        ].map((insight, index) => (
-                            <div
-                                key={index}
-                                className={`flex items-start space-x-4 p-4 rounded-lg ${insight.type === "warning"
-                                    ? "bg-yellow-50"
-                                    : insight.type === "alert"
-                                        ? "bg-red-50"
-                                        : "bg-blue-50"
-                                    }`}
-                            >
-                                <AlertCircle
-                                    className={`w-5 h-5 mt-0.5 ${insight.type === "warning"
-                                        ? "text-yellow-600"
-                                        : insight.type === "alert"
-                                            ? "text-red-600"
-                                            : "text-blue-600"
-                                        }`}
-                                />
-                                <p className="text-sm">{insight.message}</p>
-                            </div>
-                        ))}
-                    </div>
-                </CardContent>
-            </Card>
+
         </div>
     )
 }

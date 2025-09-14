@@ -35,7 +35,7 @@ export function TopBar() {
     }
   }
 
-  const isCorrectNetwork = chainId === NETWORKS.GALILEO.id
+  const isCorrectNetwork = chainId === NETWORKS.SOMNIA.id
 
   const handleConnect = async () => {
     try {
@@ -47,14 +47,14 @@ export function TopBar() {
 
   if (!isConnected) {
     return (
-      <div className="flex h-16 items-center justify-between px-6 border-b border-blue-100 bg-white shadow-sm">
+      <div className="flex h-16 items-center justify-between px-6 border-b border-purple-100 bg-white shadow-sm">
         <div className="flex items-center space-x-2">
-          <Network className="w-5 h-5 text-blue-400" />
-          <span className="text-sm text-blue-600">Not connected to 0G Network</span>
+          <Network className="w-5 h-5 text-purple-500" />
+          <span className="text-sm text-purple-700">Somnia Network • Wallet not connected</span>
         </div>
         <Button
           onClick={handleConnect}
-          className="bg-blue-600 hover:bg-blue-700 text-white transition-all px-6 py-2 text-sm font-medium rounded-xl"
+          className="bg-purple-600 hover:bg-purple-700 text-white transition-all px-6 py-2 text-sm font-medium rounded-xl"
         >
           <Wallet className="w-4 h-4 mr-2" />
           Connect Wallet
@@ -64,38 +64,38 @@ export function TopBar() {
   }
 
   return (
-    <div className="flex h-16 items-center justify-between px-6 border-b border-blue-100 bg-white shadow-sm">
+    <div className="flex h-16 items-center justify-between px-6 border-b border-purple-100 bg-white shadow-sm">
       <div className="flex items-center space-x-4">
         <div className="flex items-center space-x-2">
           <div className={`w-2 h-2 ${isCorrectNetwork ? 'bg-green-500' : 'bg-yellow-500'} rounded-full animate-pulse`}></div>
-          <span className="text-sm text-blue-600 font-medium">
-            {isCorrectNetwork ? 'Connected to 0G' : 'Wrong Network'}
+          <span className="text-sm text-purple-700 font-medium">
+            {isCorrectNetwork ? 'Connected to Somnia Network' : 'Wrong Network'}
           </span>
         </div>
-        <Separator orientation="vertical" className="h-6 bg-blue-100" />
+        <Separator orientation="vertical" className="h-6 bg-purple-100" />
         <div className="flex items-center space-x-2">
-          <Network className="w-4 h-4 text-blue-400" />
-          <span className="text-sm text-blue-600">
-            {isCorrectNetwork ? '0G Galileo Network' : 'Please switch to 0G Network'}
+          <Network className="w-4 h-4 text-purple-500" />
+          <span className="text-sm text-purple-700">
+            {isCorrectNetwork ? 'Somnia Network' : 'Please switch to Somnia Network'}
           </span>
         </div>
       </div>
 
       <div className="flex items-center space-x-3">
-        <div className="flex items-center space-x-2 bg-blue-50 rounded-xl px-4 py-2 border border-blue-100 transition-all hover:border-blue-200">
+        <div className="flex items-center space-x-2 bg-purple-50 rounded-xl px-4 py-2 border border-purple-100 transition-all hover:border-purple-200">
           <Avatar className="w-6 h-6">
-            <AvatarFallback className="text-xs bg-blue-100 text-blue-600">
+            <AvatarFallback className="text-xs bg-purple-100 text-purple-700">
               {address ? address.slice(2, 4).toUpperCase() : "??"}
             </AvatarFallback>
           </Avatar>
-          <span className="text-sm font-medium text-blue-900">
+          <span className="text-sm font-medium text-purple-900">
             {address ? formatAddress(address) : "Unknown"}
           </span>
           <Button
             variant="ghost"
             size="sm"
             onClick={copyToClipboard}
-            className="h-6 w-6 p-0 hover:bg-blue-100 text-blue-600 transition-colors"
+            className="h-6 w-6 p-0 hover:bg-purple-100 text-purple-700 transition-colors"
           >
             {copied ? (
               <Check className="w-3 h-3 text-green-600" />
@@ -109,7 +109,7 @@ export function TopBar() {
           variant="ghost"
           size="sm"
           onClick={() => disconnect()}
-          className="text-blue-600 hover:bg-blue-50 hover:text-blue-700 rounded-xl"
+          className="text-purple-700 hover:bg-purple-50 hover:text-purple-800 rounded-xl"
         >
           <LogOut className="w-4 h-4" />
         </Button>

@@ -62,7 +62,7 @@ export default function HistoryPage() {
     token: event.type === 'deposit' ? 'STT' : 'RBT',
     value: `$${(parseFloat(event.type === 'deposit' ? event.sttAmount : event.rebaseTokenAmount) * 1000).toFixed(2)}`, // Mock USD value
     status: 'completed' as const,
-    timestamp: new Date(event.timestamp * 1000).toLocaleString(),
+    timestamp: new Date(event.timestamp * 1000).toISOString(),
     hash: event.transactionHash,
     snapshotRootHash: undefined, // No snapshot data from contract events
     snapshotData: undefined
@@ -76,7 +76,7 @@ export default function HistoryPage() {
     token: 'STT',
     value: `$${(deposit.amount * 1000).toFixed(2)}`, // Mock USD value
     status: 'completed' as const,
-    timestamp: new Date(deposit.created_at).toLocaleString(),
+    timestamp: new Date(deposit.created_at).toISOString(),
     hash: deposit.tx_hash,
     snapshotRootHash: undefined,
     snapshotData: undefined
@@ -134,10 +134,12 @@ export default function HistoryPage() {
   const paginatedTransactions = filteredTransactions.slice(startIndex, endIndex)
 
   const formatTimeAgo = (timestamp: string) => {
-    const now = new Date()
     const txTime = new Date(timestamp)
-    const diffInSeconds = Math.floor((now.getTime() - txTime.getTime()) / 1000)
+    const nowMs = Date.now()
+    const txMs = txTime.getTime()
+    if (Number.isNaN(txMs)) return 'just now'
 
+    const diffInSeconds = Math.floor((nowMs - txMs) / 1000)
     if (diffInSeconds < 60) return `${diffInSeconds} seconds ago`
     if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`
     if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`
@@ -215,7 +217,7 @@ export default function HistoryPage() {
                 {totalPages > 1 && ` • Page ${currentPage} of ${totalPages}`}
                 <br />
                 <span className="text-xs text-gray-500">
-                  Showing events from the last 500 blocks (RPC limitation)
+                  Showing events from the last 500 blocks and neon database
                 </span>
               </CardDescription>
             </div>
@@ -263,7 +265,7 @@ export default function HistoryPage() {
                           {tx.snapshotRootHash && (
                             <Badge variant="secondary" className="flex items-center space-x-1">
                               <Database className="w-3 h-3" />
-                              <span>0G</span>
+                              <span>Snapshot</span>
                             </Badge>
                           )}
                         </div>

@@ -54,7 +54,7 @@ export default function Home() {
             <h1 className="text-6xl md:text-7xl font-bold text-purple-900 mb-6 leading-tight">
               Cross-Chain <br />
               <span className="bg-gradient-to-r from-purple-600 to-orange-500 bg-clip-text text-transparent">
-                Glacia Vault
+                Smart Vault
               </span>
             </h1>
             <p className="text-xl text-purple-600 mb-12 leading-relaxed max-w-3xl mx-auto">
@@ -114,9 +114,9 @@ export default function Home() {
                   gradient: "from-orange-400 to-purple-600"
                 },
                 {
-                  icon: Shield,
-                  title: "Enterprise Security",
-                  description: "Bank-grade security with comprehensive audit trails for Somnia ecosystem.",
+                  icon: Database,
+                  title: "Neon DB Integration",
+                  description: "Event mirroring and analytics storage on Neon serverless Postgres.",
                   gradient: "from-purple-600 to-orange-600"
                 },
                 {
@@ -156,7 +156,7 @@ export default function Home() {
                     <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-orange-500 rounded-xl flex items-center justify-center mr-4 transform rotate-3">
                       <Coins className="w-6 h-6 text-white" />
                     </div>
-                    Somnia Glacia Vault
+                    Somnia Smart Vault
                   </h3>
                   <p className="text-purple-600 mb-12 text-lg max-w-3xl">
                     A cross-chain DeFi vault built for Somnia Hackathon that enables seamless message transfers
@@ -201,12 +201,12 @@ export default function Home() {
                 {[
                   {
                     title: 'Cross-Chain Deposit',
-                    description: 'User deposits tokens from any supported chain using Glacia Labs integration.',
+                    description: 'User deposits tokens from any supported chain using secure cross-chain messaging.',
                     icon: Coins
                   },
                   {
                     title: 'Message Processing',
-                    description: 'Cross-chain messages are processed securely via Glacia Labs messaging.',
+                    description: 'Cross-chain messages are processed securely by the Smart Vault pipeline.',
                     icon: Database
                   },
                   {
@@ -274,10 +274,10 @@ export default function Home() {
             <h2 className="text-3xl font-bold text-purple-900 text-center mb-12">Somnia Hackathon Roadmap</h2>
             <div className="max-w-3xl mx-auto space-y-6">
               {[
-                { phase: "Phase 1", title: "Glacia Labs Messaging Integration", status: "complete" },
-                { phase: "Phase 2", title: "Somnia Chain Integration", status: "current" },
-                { phase: "Phase 3", title: "n8n Workflow Automation", status: "future" },
-                { phase: "Phase 4", title: "Multi-Chain Support & Advanced Features", status: "future" }
+                { phase: "Phase 1", title: "Messaging Integration", status: "complete" },
+                { phase: "Phase 2", title: "Somnia Chain Integration", status: "complete" },
+                { phase: "Phase 3", title: "n8n Workflow Automation", status: "complete" },
+                { phase: "Phase 4", title: "Multi-Chain Support & Advanced Features", status: "current" }
               ].map((item) => (
                 <div key={item.phase} className="flex items-center bg-white p-6 rounded-xl border border-purple-100">
                   <div className="w-24 font-medium text-purple-600">{item.phase}</div>
