@@ -52,7 +52,7 @@ const stats = [
   },
   {
     name: "APY",
-    value: "8.5%",
+    value: "5%",
     icon: Shield,
     change: "+0.2%",
     changeType: "positive"

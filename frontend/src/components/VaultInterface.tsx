@@ -464,7 +464,7 @@ export default function VaultInterface() {
                                 <div className="flex items-center justify-between p-4 bg-white rounded-xl border border-purple-100">
                                     <div className="flex items-center space-x-3">
                                         <Database className="w-6 h-6 text-purple-600" />
-                                        <span className="text-lg font-medium text-purple-900">Send Glacia Labs Message</span>
+                                        <span className="text-lg font-medium text-purple-900">Send Cross-Chain Message (coming soon) </span>
                                     </div>
                                     <Switch
                                         checked={storeSnapshot}
@@ -528,7 +528,7 @@ export default function VaultInterface() {
                                 <div className="flex items-center justify-between p-4 bg-white rounded-xl border border-purple-100">
                                     <div className="flex items-center space-x-3">
                                         <Database className="w-6 h-6 text-purple-600" />
-                                        <span className="text-lg font-medium text-purple-900">Send Glacia Labs Message</span>
+                                        <span className="text-lg font-medium text-purple-900">Send Cross-Chain Message (coming soon) </span>
                                     </div>
                                     <Switch
                                         checked={storeSnapshot}

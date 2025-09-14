@@ -52,14 +52,14 @@ export default function Home() {
               <span className="text-purple-600 font-semibold">Somnia Hackathon 2025</span>
             </div>
             <h1 className="text-6xl md:text-7xl font-bold text-purple-900 mb-6 leading-tight">
-              Cross-Chain <br />
+              Somnia-Nexus-Vaultia <br />
               <span className="bg-gradient-to-r from-purple-600 to-orange-500 bg-clip-text text-transparent">
                 Smart Vault
               </span>
             </h1>
             <p className="text-xl text-purple-600 mb-12 leading-relaxed max-w-3xl mx-auto">
-              Experience seamless cross-chain DeFi with Glacia Labs integration,
-              powered by n8n automation for the Somnia Hackathon ecosystem.
+              Experience seamless DeFi with Somnia-Nexus-Vaultia,
+              powered by OpenAI integration and n8n automation for the Somnia Network ecosystem.
             </p>
             <div className="flex items-center justify-center space-x-6">
               <button
@@ -96,7 +96,7 @@ export default function Home() {
                 Somnia-Powered DeFi
               </h2>
               <p className="text-purple-600">
-                Cross-chain vault technology built for the Somnia Hackathon ecosystem
+                Somnia-Nexus-Vaultia vault technology built for the Somnia ecosystem
               </p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8 max-w-6xl mx-auto">
@@ -109,8 +109,8 @@ export default function Home() {
                 },
                 {
                   icon: Cpu,
-                  title: "n8n Automation",
-                  description: "Intelligent workflow automation powered by n8n for DeFi operations.",
+                  title: "Ai integration & n8n Automation",
+                  description: "Intelligent workflow automation powered by OpenAI integration and n8n for DeFi operations.",
                   gradient: "from-orange-400 to-purple-600"
                 },
                 {
@@ -121,7 +121,7 @@ export default function Home() {
                 },
                 {
                   icon: Link,
-                  title: "Glacia Labs Integration",
+                  title: "Cross-Chain Messaging",
                   description: "Seamless cross-chain message transfers powered by Glacia Labs on Somnia.",
                   gradient: "from-purple-500 to-orange-500"
                 }
@@ -172,14 +172,14 @@ export default function Home() {
                       },
                       {
                         icon: GitMerge,
-                        title: "Glacia Labs Integration",
+                        title: "Cross-Chain Messaging ",
                         description: "Seamless cross-chain messaging via Glacia Labs",
                         gradient: "from-orange-400 to-purple-600"
                       },
                       {
                         icon: Timer,
-                        title: "n8n Automation",
-                        description: "Intelligent workflow automation with n8n",
+                        title: "Ai integration & n8n automation",
+                        description: "Intelligent vault ai integration and workflow automation with n8n",
                         gradient: "from-purple-600 to-orange-600"
                       }
                     ].map((feature, index) => (
@@ -210,8 +210,8 @@ export default function Home() {
                     icon: Database
                   },
                   {
-                    title: 'n8n Automation',
-                    description: 'Intelligent workflow automation and processing powered by n8n.',
+                    title: 'Ai integration & n8n Automation',
+                    description: 'Intelligent workflow automation and processing powered by OpenAI integration and n8n.',
                     icon: Cpu
                   },
                   {
@@ -271,12 +271,12 @@ export default function Home() {
         {/* Roadmap */}
         <section className="py-20">
           <div className="container mx-auto px-4">
-            <h2 className="text-3xl font-bold text-purple-900 text-center mb-12">Somnia Hackathon Roadmap</h2>
+            <h2 className="text-3xl font-bold text-purple-900 text-center mb-12">Somnia Vault Roadmap</h2>
             <div className="max-w-3xl mx-auto space-y-6">
               {[
                 { phase: "Phase 1", title: "Messaging Integration", status: "complete" },
                 { phase: "Phase 2", title: "Somnia Chain Integration", status: "complete" },
-                { phase: "Phase 3", title: "n8n Workflow Automation", status: "complete" },
+                { phase: "Phase 3", title: "Ai integration & n8n Workflow Automation", status: "complete" },
                 { phase: "Phase 4", title: "Multi-Chain Support & Advanced Features", status: "current" }
               ].map((item) => (
                 <div key={item.phase} className="flex items-center bg-white p-6 rounded-xl border border-purple-100">
