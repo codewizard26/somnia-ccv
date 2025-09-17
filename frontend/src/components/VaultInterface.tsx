@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useAccount, useBalance, useChainId, useReadContract, useWriteContract, useSwitchChain, useWaitForTransactionReceipt } from "wagmi"
 import { parseEther, formatEther } from "viem"
-import { ArrowUpRight, ArrowDownRight, Loader2, Database, Crown, History } from "lucide-react"
+import { ArrowUpRight, ArrowDownRight, Loader2, Database, History } from "lucide-react"
 import toast from "react-hot-toast"
 import { useRouter } from "next/navigation"
 
@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
 import { CONTRACTS, NETWORKS } from "@/config/contracts"
-import StakingInterface from "./StakingInterface"
+// import StakingInterface from "./StakingInterface"
 import RebaseTokenABI from "@/contracts/RebaseToken.json"
 import VaultABI from "@/contracts/Vault.json"
 import SimpleRebaseTokenPoolABI from "@/contracts/SimpleRebaseTokenPool.json"
@@ -42,6 +42,8 @@ export default function VaultInterface() {
     const [isLoading, setIsLoading] = useState(false)
     const [transactions, setTransactions] = useState<Transaction[]>([])
     const [pendingDepositAmount, setPendingDepositAmount] = useState<string>("")
+    const [pendingWithdrawalAmount, setPendingWithdrawalAmount] = useState<string>("")
+    const [lastAction, setLastAction] = useState<"deposit" | "withdraw" | null>(null)
 
     const { writeContract, isPending, error, data: txHash } = useWriteContract()
 
@@ -78,28 +80,47 @@ export default function VaultInterface() {
         functionName: 'totalSupply',
     })
 
+    // Read total staked (for summary bar)
+    const { data: totalStaked } = useReadContract({
+        address: CONTRACTS.POOL as `0x${string}`,
+        abi: SimpleRebaseTokenPoolABI,
+        functionName: 'totalStaked',
+        query: {
+            enabled: !!CONTRACTS.POOL,
+        },
+    })
+
     // (Removed) Pool balance check UI and rescue actions
 
     const isCorrectNetwork = chainId === NETWORKS.SOMNIA.id
 
     // Handle transaction confirmation and send n8n notification
     useEffect(() => {
-        if (receipt && txHash && address && pendingDepositAmount) {
-            // Transaction confirmed, store in database and send n8n notification
-            storeDepositInDatabase(address, txHash, pendingDepositAmount)
-            sendN8nNotification(address, txHash)
+        if (receipt && txHash && address) {
+            if (lastAction === 'deposit' && pendingDepositAmount) {
+                // Store deposit in DB and notify
+                storeDepositInDatabase(address, txHash, pendingDepositAmount)
+                sendN8nNotification(address, txHash)
+                setPendingDepositAmount("")
+            }
 
-            // Clear pending deposit amount
-            setPendingDepositAmount("")
+            if (lastAction === 'withdraw' && pendingWithdrawalAmount) {
+                // Store withdrawal in DB
+                storeWithdrawalInDatabase(address, txHash, pendingWithdrawalAmount)
+                setPendingWithdrawalAmount("")
+            }
 
-            // Refetch balances
+            // Refetch balances after either action
             setTimeout(() => {
                 refetchRBTBalance()
                 refetchVaultBalance()
                 refetchTotalSupply()
             }, 1000)
+
+            // Reset last action after handling
+            setLastAction(null)
         }
-    }, [receipt, txHash, address, pendingDepositAmount])
+    }, [receipt, txHash, address, pendingDepositAmount, pendingWithdrawalAmount, lastAction])
 
     const handleSwitchToSomnia = async () => {
         try {
@@ -188,6 +209,7 @@ export default function VaultInterface() {
 
             // Store the deposit amount for later use when transaction is confirmed
             setPendingDepositAmount(amount)
+            setLastAction('deposit')
 
             // Execute the deposit transaction
             writeContract({
@@ -253,6 +275,32 @@ export default function VaultInterface() {
         }
     }
 
+    const storeWithdrawalInDatabase = async (walletAddress: string, txHash: string, withdrawAmount: string) => {
+        try {
+            const response = await fetch("/api/withdraw", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    user: walletAddress,
+                    amount: parseFloat(withdrawAmount),
+                    txHash: txHash
+                })
+            })
+
+            const data = await response.json()
+            if (data.success) {
+                console.log("Withdrawal stored in database successfully")
+                toast.success("Withdrawal recorded in database!")
+            } else {
+                console.error("Failed to store withdrawal:", data.error)
+                toast.error("Failed to record withdrawal: " + data.error)
+            }
+        } catch (error) {
+            console.error("Error storing withdrawal:", error)
+            toast.error("Error recording withdrawal")
+        }
+    }
+
     const handleWithdraw = async () => {
         if (!amount || parseFloat(amount) <= 0) {
             toast.error('Please enter a valid amount')
@@ -269,6 +317,10 @@ export default function VaultInterface() {
         try {
             const loadingToast = toast.loading("Transaction sent...")
             const amountInWei = parseEther(amount)
+
+            // Remember amount and action to persist after confirmation
+            setPendingWithdrawalAmount(amount)
+            setLastAction('withdraw')
 
             writeContract({
                 address: CONTRACTS.POOL as `0x${string}`,
@@ -321,15 +373,8 @@ export default function VaultInterface() {
             }
 
             toast.dismiss(loadingToast)
-            toast.success("Transaction confirmed!")
+            toast.success("Transaction sent! Waiting for confirmation...")
             setAmount("")
-
-            // Refetch balances after successful withdrawal
-            setTimeout(() => {
-                refetchRBTBalance()
-                refetchVaultBalance()
-                refetchTotalSupply()
-            }, 2000)
 
         } catch (error) {
             console.error('Withdraw error:', error)
@@ -355,10 +400,10 @@ export default function VaultInterface() {
 
     if (!isConnected) {
         return (
-            <Card className="border-none shadow-lg bg-gradient-to-br from-white to-purple-50">
+            <Card className="rounded-2xl border border-gray-200 shadow-md bg-white">
                 <CardHeader className="space-y-1">
-                    <CardTitle className="text-2xl text-purple-900">Connect Wallet</CardTitle>
-                    <CardDescription className="text-purple-600">Please connect your wallet to use the vault</CardDescription>
+                    <CardTitle className="text-2xl text-gray-900">Connect Wallet</CardTitle>
+                    <CardDescription className="text-gray-600">Please connect your wallet to use the vault</CardDescription>
                 </CardHeader>
             </Card>
         )
@@ -366,15 +411,15 @@ export default function VaultInterface() {
 
     if (!isCorrectNetwork) {
         return (
-            <Card className="border-none shadow-lg bg-gradient-to-br from-white to-purple-50">
+            <Card className="rounded-2xl border border-gray-200 shadow-md bg-white">
                 <CardHeader className="space-y-1">
-                    <CardTitle className="text-2xl text-purple-900">Wrong Network</CardTitle>
-                    <CardDescription className="text-purple-600">Please switch to Somnia Testnet</CardDescription>
+                    <CardTitle className="text-2xl text-gray-900">Wrong Network</CardTitle>
+                    <CardDescription className="text-gray-600">Please switch to Somnia Testnet</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <Button
                         onClick={handleSwitchToSomnia}
-                        className="w-full bg-purple-600 hover:bg-purple-700 text-white transition-all"
+                        className="w-full bg-purple-600 hover:bg-purple-700 text-white transition-colors rounded-xl"
                     >
                         Switch to Somnia Testnet
                     </Button>
@@ -385,18 +430,50 @@ export default function VaultInterface() {
 
     return (
         <div className="space-y-6 max-w-4xl mx-auto">
-            {/* Deposit/Withdraw Interface - Moved to top */}
-            <Card className="border-none shadow-lg bg-gradient-to-br from-white to-purple-50">
+            {/* Summary Bar */}
+            <Card className="rounded-2xl border border-gray-200 shadow-md bg-white">
+                <CardContent className="py-4">
+                    <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+                        <div className="p-3 rounded-xl border border-gray-100">
+                            <p className="text-xs text-gray-500">Vault Balance</p>
+                            <p className="text-xl font-semibold text-gray-900">
+                                {vaultBalance ? `${parseFloat(formatEther(vaultBalance as bigint)).toFixed(2)} STT` : "-"}
+                            </p>
+                        </div>
+                        <div className="p-3 rounded-xl border border-gray-100">
+                            <p className="text-xs text-gray-500">RBT Total Supply</p>
+                            <p className="text-xl font-semibold text-gray-900">
+                                {rbtTotalSupply ? `${parseFloat(formatEther(rbtTotalSupply as bigint)).toFixed(2)} RBT` : "-"}
+                            </p>
+                        </div>
+                        <div className="p-3 rounded-xl border border-gray-100">
+                            <p className="text-xs text-gray-500">Your STT</p>
+                            <p className="text-xl font-semibold text-gray-900">
+                                {balance ? `${parseFloat(balance.formatted).toFixed(2)} STT` : "-"}
+                            </p>
+                        </div>
+                        <div className="p-3 rounded-xl border border-gray-100">
+                            <p className="text-xs text-gray-500">Total Staked</p>
+                            <p className="text-xl font-semibold text-gray-900">
+                                {totalStaked ? `${parseFloat(formatEther(totalStaked as bigint)).toFixed(2)} RBT` : "-"}
+                            </p>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+
+            {/* Deposit/Withdraw Interface */}
+            <Card className="rounded-2xl border border-gray-200 shadow-md bg-white">
                 <CardHeader className="space-y-1">
                     <div className="flex items-center justify-between">
                         <div>
-                            <CardTitle className="text-3xl font-bold text-purple-900 text-left">Vault Operations</CardTitle>
-                            <CardDescription className="text-purple-600 text-left text-lg">Deposit or withdraw tokens from the vault</CardDescription>
+                            <CardTitle className="text-2xl font-semibold text-gray-900 text-left">Vault</CardTitle>
+                            <CardDescription className="text-gray-600 text-left">Deposit or withdraw tokens from the vault</CardDescription>
                         </div>
                         <Button
                             onClick={() => router.push('/dashboard/history')}
                             variant="outline"
-                            className="flex items-center space-x-2 border-purple-200 text-purple-600 hover:bg-purple-50"
+                            className="flex items-center space-x-2 rounded-xl border-gray-200 text-gray-700 hover:bg-gray-50"
                         >
                             <History className="w-4 h-4" />
                             <span>View History</span>
@@ -405,32 +482,23 @@ export default function VaultInterface() {
                 </CardHeader>
                 <CardContent>
                     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                        <TabsList className="grid w-full grid-cols-3 mb-8">
+                        <TabsList className="grid w-full grid-cols-2 mb-6 bg-gray-50 rounded-xl p-1">
                             <TabsTrigger
                                 value="deposit"
-                                className="data-[state=active]:bg-purple-600 data-[state=active]:text-white text-left pl-4"
+                                className="text-gray-600 data-[state=active]:bg-purple-600 data-[state=active]:text-white rounded-lg transition-colors"
                             >
                                 <div className="flex items-center space-x-2">
                                     <ArrowDownRight className="w-5 h-5" />
-                                    <span className="text-lg">Deposit</span>
+                                    <span className="text-sm font-medium">Deposit</span>
                                 </div>
                             </TabsTrigger>
                             <TabsTrigger
                                 value="withdraw"
-                                className="data-[state=active]:bg-purple-600 data-[state=active]:text-white text-left pl-4"
+                                className="text-gray-600 data-[state=active]:bg-purple-600 data-[state=active]:text-white rounded-lg transition-colors"
                             >
                                 <div className="flex items-center space-x-2">
                                     <ArrowUpRight className="w-5 h-5" />
-                                    <span className="text-lg">Withdraw</span>
-                                </div>
-                            </TabsTrigger>
-                            <TabsTrigger
-                                value="staking"
-                                className="data-[state=active]:bg-purple-600 data-[state=active]:text-white text-left pl-4"
-                            >
-                                <div className="flex items-center space-x-2">
-                                    <Crown className="w-5 h-5" />
-                                    <span className="text-lg">Governance</span>
+                                    <span className="text-sm font-medium">Withdraw</span>
                                 </div>
                             </TabsTrigger>
                         </TabsList>
@@ -438,33 +506,34 @@ export default function VaultInterface() {
                         <TabsContent value="deposit" className="space-y-4">
                             <div className="space-y-4">
                                 <div>
-                                    <label className="block text-lg font-medium text-purple-900 mb-3 text-left">
-                                        Amount (STT)
-                                    </label>
-                                    <div className="flex space-x-2">
+                                    <div className="flex items-baseline justify-between mb-2">
+                                        <label className="block text-sm font-medium text-gray-800">Amount (STT)</label>
+                                        <p className="text-xs text-gray-500">Balance: {balance ? `${parseFloat(balance.formatted).toFixed(4)} ${balance.symbol}` : "0.0000 STT"}</p>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
                                         <input
                                             type="number"
                                             value={amount}
                                             onChange={(e) => setAmount(e.target.value)}
                                             placeholder="0.0"
                                             disabled={isLoading || isPending}
-                                            className="flex-1 px-4 py-4 text-lg border border-purple-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:opacity-50 bg-white"
+                                            className="flex-1 px-4 py-3 text-base border border-gray-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-purple-100 focus:border-purple-400 disabled:opacity-50 bg-white transition"
                                         />
                                         <Button
                                             onClick={handleMaxDeposit}
                                             disabled={isLoading || isPending}
-                                            variant="outline"
-                                            className="px-8 text-lg rounded-xl border-purple-200 text-purple-600 hover:bg-purple-50"
+                                            variant="ghost"
+                                            className="px-4 text-sm font-medium text-purple-600 hover:bg-purple-50 rounded-xl"
                                         >
                                             Max
                                         </Button>
                                     </div>
                                 </div>
 
-                                <div className="flex items-center justify-between p-4 bg-white rounded-xl border border-purple-100">
+                                <div className="flex items-center justify-between p-4 bg-white rounded-xl border border-gray-100">
                                     <div className="flex items-center space-x-3">
-                                        <Database className="w-6 h-6 text-purple-600" />
-                                        <span className="text-lg font-medium text-purple-900">Send Cross-Chain Message (coming soon) </span>
+                                        <Database className="w-6 h-6 text-gray-500" />
+                                        <span className="text-sm font-medium text-gray-800">Send Cross-Chain Message (coming soon)</span>
                                     </div>
                                     <Switch
                                         checked={storeSnapshot}
@@ -477,22 +546,22 @@ export default function VaultInterface() {
                                 <Button
                                     onClick={handleDeposit}
                                     disabled={isLoading || isPending || isConfirming || !amount || parseFloat(amount) <= 0}
-                                    className="w-full bg-purple-600 hover:bg-purple-700 text-white rounded-xl py-7 text-lg transition-all"
+                                    className="w-full bg-purple-600 hover:bg-purple-700 text-white rounded-2xl py-5 text-base font-semibold transition-colors"
                                 >
                                     {isLoading || isPending ? (
                                         <>
-                                            <Loader2 className="w-6 h-6 mr-2 animate-spin" />
-                                            <span className="text-lg">Processing...</span>
+                                            <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                                            <span>Processing...</span>
                                         </>
                                     ) : isConfirming ? (
                                         <>
-                                            <Loader2 className="w-6 h-6 mr-2 animate-spin" />
-                                            <span className="text-lg">Confirming...</span>
+                                            <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                                            <span>Confirming...</span>
                                         </>
                                     ) : (
                                         <>
-                                            <ArrowDownRight className="w-6 h-6 mr-2" />
-                                            <span className="text-lg">Deposit STT</span>
+                                            <ArrowDownRight className="w-5 h-5 mr-2" />
+                                            <span>Deposit STT</span>
                                         </>
                                     )}
                                 </Button>
@@ -502,33 +571,34 @@ export default function VaultInterface() {
                         <TabsContent value="withdraw" className="space-y-4">
                             <div className="space-y-4">
                                 <div>
-                                    <label className="block text-lg font-medium text-purple-900 mb-3 text-left">
-                                        Amount (RBT)
-                                    </label>
-                                    <div className="flex space-x-2">
+                                    <div className="flex items-baseline justify-between mb-2">
+                                        <label className="block text-sm font-medium text-gray-800">Amount (RBT)</label>
+                                        <p className="text-xs text-gray-500">Balance: {userRBTBalance ? `${parseFloat(formatEther(userRBTBalance as bigint)).toFixed(6)} RBT` : "0.000000 RBT"}</p>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
                                         <input
                                             type="number"
                                             value={amount}
                                             onChange={(e) => setAmount(e.target.value)}
                                             placeholder="0.0"
                                             disabled={isLoading || isPending}
-                                            className="flex-1 px-4 py-4 text-lg border border-purple-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:opacity-50 bg-white"
+                                            className="flex-1 px-4 py-3 text-base border border-gray-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-purple-100 focus:border-purple-400 disabled:opacity-50 bg-white transition"
                                         />
                                         <Button
                                             onClick={handleMaxWithdraw}
                                             disabled={isLoading || isPending}
-                                            variant="outline"
-                                            className="px-8 text-lg rounded-xl border-purple-200 text-purple-600 hover:bg-purple-50"
+                                            variant="ghost"
+                                            className="px-4 text-sm font-medium text-purple-600 hover:bg-purple-50 rounded-xl"
                                         >
                                             Max
                                         </Button>
                                     </div>
                                 </div>
 
-                                <div className="flex items-center justify-between p-4 bg-white rounded-xl border border-purple-100">
+                                <div className="flex items-center justify-between p-4 bg-white rounded-xl border border-gray-100">
                                     <div className="flex items-center space-x-3">
-                                        <Database className="w-6 h-6 text-purple-600" />
-                                        <span className="text-lg font-medium text-purple-900">Send Cross-Chain Message (coming soon) </span>
+                                        <Database className="w-6 h-6 text-gray-500" />
+                                        <span className="text-sm font-medium text-gray-800">Send Cross-Chain Message (coming soon)</span>
                                     </div>
                                     <Switch
                                         checked={storeSnapshot}
@@ -541,56 +611,43 @@ export default function VaultInterface() {
                                 <Button
                                     onClick={handleWithdraw}
                                     disabled={isLoading || isPending || !amount || parseFloat(amount) <= 0}
-                                    className="w-full border-2 border-purple-200 text-purple-600 hover:bg-purple-50 rounded-xl py-7 text-lg transition-all"
+                                    className="w-full border border-gray-200 text-gray-800 hover:bg-gray-50 rounded-2xl py-5 text-base font-semibold transition-colors"
                                 >
                                     {isLoading || isPending ? (
                                         <>
-                                            <Loader2 className="w-6 h-6 mr-2 animate-spin" />
-                                            <span className="text-lg">Processing...</span>
+                                            <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                                            <span>Processing...</span>
                                         </>
                                     ) : (
                                         <>
-                                            <ArrowUpRight className="w-6 h-6 mr-2" />
-                                            <span className="text-lg">Withdraw STT</span>
+                                            <ArrowUpRight className="w-5 h-5 mr-2" />
+                                            <span>Withdraw STT</span>
                                         </>
                                     )}
                                 </Button>
-                            </div>
-                        </TabsContent>
-
-                        <TabsContent value="staking" className="space-y-4">
-                            <div className="p-6 bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl">
-                                <div className="text-center mb-4">
-                                    <Crown className="w-16 h-16 text-yellow-600 mx-auto mb-3" />
-                                    <h3 className="text-2xl font-bold text-purple-900 mb-2">Governance & Staking</h3>
-                                    <p className="text-purple-600">
-                                        Stake your RBT tokens to participate in governance and earn rewards
-                                    </p>
-                                </div>
-                                <StakingInterface />
                             </div>
                         </TabsContent>
                     </Tabs>
                 </CardContent>
             </Card>
 
-            {/* Balance Display */}
+            {/* Balance & Vault Stats */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Card className="border-none shadow-lg bg-gradient-to-br from-white to-purple-50">
+                <Card className="rounded-2xl border border-gray-200 shadow-md bg-white">
                     <CardHeader className="space-y-1">
-                        <CardTitle className="text-2xl text-purple-900 text-left">Your Balances</CardTitle>
-                        <CardDescription className="text-purple-600 text-left">Available tokens</CardDescription>
+                        <CardTitle className="text-xl text-gray-900 text-left">Your Balances</CardTitle>
+                        <CardDescription className="text-gray-600 text-left">Available tokens</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        <div className="p-4 bg-white rounded-xl shadow-sm border border-purple-100">
-                            <p className="text-sm text-purple-600 mb-2 text-left">STT Balance</p>
-                            <p className="text-2xl font-bold text-purple-900 text-left">
+                        <div className="p-4 bg-white rounded-xl border border-gray-100">
+                            <p className="text-sm text-gray-500 mb-1 text-left">STT Balance</p>
+                            <p className="text-2xl font-semibold text-gray-900 text-left">
                                 {balance ? `${parseFloat(balance.formatted).toFixed(4)} ${balance.symbol}` : "0.0000 STT"}
                             </p>
                         </div>
-                        <div className="p-4 bg-white rounded-xl shadow-sm border border-purple-100">
-                            <p className="text-sm text-purple-600 mb-2 text-left">RBT Balance</p>
-                            <p className="text-2xl font-bold text-purple-900 text-left">
+                        <div className="p-4 bg-white rounded-xl border border-gray-100">
+                            <p className="text-sm text-gray-500 mb-1 text-left">RBT Balance</p>
+                            <p className="text-2xl font-semibold text-gray-900 text-left">
                                 {userRBTBalance ? `${parseFloat(formatEther(userRBTBalance as bigint)).toFixed(6)} RBT` : "0.000000 RBT"}
                             </p>
                         </div>
@@ -598,21 +655,21 @@ export default function VaultInterface() {
                 </Card>
 
                 {/* Vault Statistics */}
-                <Card className="border-none shadow-lg bg-gradient-to-br from-white to-purple-50">
+                <Card className="rounded-2xl border border-gray-200 shadow-md bg-white">
                     <CardHeader className="space-y-1">
-                        <CardTitle className="text-2xl text-purple-900 text-left">Vault Statistics</CardTitle>
-                        <CardDescription className="text-purple-600 text-left">Current performance</CardDescription>
+                        <CardTitle className="text-xl text-gray-900 text-left">Vault Statistics</CardTitle>
+                        <CardDescription className="text-gray-600 text-left">Current performance</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        <div className="p-4 bg-white rounded-xl shadow-sm border border-purple-100">
-                            <p className="text-sm text-purple-600 mb-2 text-left">Vault Balance</p>
-                            <p className="text-2xl font-bold text-purple-900 text-left">
+                        <div className="p-4 bg-white rounded-xl border border-gray-100">
+                            <p className="text-sm text-gray-500 mb-1 text-left">Vault Balance</p>
+                            <p className="text-2xl font-semibold text-gray-900 text-left">
                                 {vaultBalance ? `${parseFloat(formatEther(vaultBalance as bigint)).toFixed(4)} STT` : "0.0000 STT"}
                             </p>
                         </div>
-                        <div className="p-4 bg-white rounded-xl shadow-sm border border-purple-100">
-                            <p className="text-sm text-purple-600 mb-2 text-left">Total RBT Supply</p>
-                            <p className="text-2xl font-bold text-purple-900 text-left">
+                        <div className="p-4 bg-white rounded-xl border border-gray-100">
+                            <p className="text-sm text-gray-500 mb-1 text-left">Total RBT Supply</p>
+                            <p className="text-2xl font-semibold text-gray-900 text-left">
                                 {rbtTotalSupply ? `${parseFloat(formatEther(rbtTotalSupply as bigint)).toFixed(6)} RBT` : "0.000000 RBT"}
                             </p>
                         </div>
@@ -621,19 +678,21 @@ export default function VaultInterface() {
                 </Card>
             </div>
 
+            {/* Governance Card removed to avoid duplication; use /dashboard/staking */}
+
             {/* Recent Transactions */}
             {transactions.length > 0 && (
-                <Card className="border-none shadow-lg bg-gradient-to-br from-white to-purple-50">
+                <Card className="rounded-2xl border border-gray-200 shadow-md bg-white">
                     <CardHeader className="space-y-1">
-                        <CardTitle className="text-2xl text-purple-900">Recent Transactions</CardTitle>
-                        <CardDescription className="text-purple-600">Your latest vault operations</CardDescription>
+                        <CardTitle className="text-xl text-gray-900">Recent Transactions</CardTitle>
+                        <CardDescription className="text-gray-600">Your latest vault operations</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-4">
                             {transactions.slice(0, 5).map((tx) => (
-                                <div key={tx.id} className="flex items-center justify-between p-4 bg-white rounded-xl border border-purple-100 hover:border-purple-200 transition-all">
+                                <div key={tx.id} className="flex items-center justify-between p-4 bg-white rounded-xl border border-gray-100 hover:shadow-sm transition-shadow">
                                     <div className="flex items-center space-x-4">
-                                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${tx.type === "deposit" ? "bg-purple-100 text-purple-600" : "bg-red-100 text-red-600"
+                                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${tx.type === "deposit" ? "bg-purple-100 text-purple-600" : "bg-pink-100 text-pink-600"
                                             }`}>
                                             {tx.type === "deposit" ? (
                                                 <ArrowDownRight className="w-5 h-5" />
@@ -642,19 +701,19 @@ export default function VaultInterface() {
                                             )}
                                         </div>
                                         <div>
-                                            <p className="font-medium text-purple-900 capitalize">{tx.type}</p>
-                                            <p className="text-sm text-purple-600">
+                                            <p className="font-medium text-gray-900 capitalize">{tx.type}</p>
+                                            <p className="text-sm text-gray-500">
                                                 {new Date(tx.timestamp).toLocaleString()}
                                             </p>
                                         </div>
                                     </div>
                                     <div className="text-right">
-                                        <p className="font-medium text-purple-900">{tx.amount} {tx.token}</p>
-                                        <p className="text-xs text-purple-600 font-mono">
+                                        <p className="font-medium text-gray-900">{tx.amount} {tx.token}</p>
+                                        <p className="text-xs text-gray-500 font-mono">
                                             {tx.txHash === "pending" ? "Pending..." : `${tx.txHash.slice(0, 8)}...${tx.txHash.slice(-8)}`}
                                         </p>
                                         {tx.snapshotRootHash && (
-                                            <Badge variant="secondary" className="mt-1 bg-purple-100 text-purple-600 hover:bg-purple-200">
+                                            <Badge variant="secondary" className="mt-1 bg-gray-100 text-gray-700 hover:bg-gray-200">
                                                 Glacia Labs Message
                                             </Badge>
                                         )}
@@ -668,12 +727,12 @@ export default function VaultInterface() {
 
             {/* Error Display */}
             {error && (
-                <Card className="border-none shadow-lg bg-red-50">
+                <Card className="rounded-2xl border border-red-200 shadow-md bg-red-50">
                     <CardHeader className="space-y-1">
-                        <CardTitle className="text-2xl text-red-600">Transaction Error</CardTitle>
+                        <CardTitle className="text-xl text-red-700">Transaction Error</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <p className="text-red-600">{error.message}</p>
+                        <p className="text-red-700">{error.message}</p>
                     </CardContent>
                 </Card>
             )}

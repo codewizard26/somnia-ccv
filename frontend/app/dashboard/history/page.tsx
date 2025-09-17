@@ -20,6 +20,7 @@ import { Badge } from "@/components/ui/badge"
 // import { SnapshotModal } from "@/components/SnapshotModal"
 import { useVaultEvents, VaultEvent } from "@/hooks/useVaultEvents"
 import { useDeposits, DatabaseDeposit } from "@/hooks/useDeposits"
+import { useWithdrawals, DatabaseWithdrawal } from "@/hooks/useWithdrawals"
 import { useAccount } from "wagmi"
 import { NETWORKS } from "@/config/contracts"
 
@@ -30,7 +31,7 @@ interface Transaction {
   token: string
   value: string
   status: "completed" | "pending" | "failed"
-  timestamp: string
+  timestamp: number // milliseconds since epoch
   hash: string
   snapshotRootHash?: string
   snapshotData?: {
@@ -47,6 +48,7 @@ export default function HistoryPage() {
   const { address } = useAccount()
   const { events: vaultEvents, isLoading: isLoadingEvents, error: eventsError, hasMoreEvents, oldestBlock } = useVaultEvents()
   const { deposits: dbDeposits, isLoading: isLoadingDeposits, error: depositsError, refetch: refetchDeposits } = useDeposits()
+  const { withdrawals: dbWithdrawals, isLoading: isLoadingWithdrawals, error: withdrawalsError, refetch: refetchWithdrawals } = useWithdrawals()
   const [filterType, setFilterType] = useState("all")
   const [filterStatus, setFilterStatus] = useState("all")
   const [loadingSnapshot, setLoadingSnapshot] = useState<string | null>(null)
@@ -61,7 +63,7 @@ export default function HistoryPage() {
     token: event.type === 'deposit' ? 'STT' : 'RBT',
     value: `$${(parseFloat(event.type === 'deposit' ? event.sttAmount : event.rebaseTokenAmount) * 1000).toFixed(2)}`, // Mock USD value
     status: 'completed' as const,
-    timestamp: new Date(event.timestamp * 1000).toISOString(),
+    timestamp: Math.floor(event.timestamp * 1000),
     hash: event.transactionHash,
     snapshotRootHash: undefined, // No snapshot data from contract events
     snapshotData: undefined
@@ -75,15 +77,41 @@ export default function HistoryPage() {
     token: 'STT',
     value: `$${(deposit.amount * 1000).toFixed(2)}`, // Mock USD value
     status: 'completed' as const,
-    timestamp: new Date(deposit.created_at).toISOString(),
+    timestamp: (() => {
+      const ts = deposit.created_at as unknown as string
+      if (!ts) return Date.now()
+      if (/[zZ]|[+-]\d{2}:?\d{2}$/.test(ts)) return new Date(ts).getTime()
+      const iso = ts.replace(' ', 'T') + 'Z'
+      return new Date(iso).getTime()
+    })(),
     hash: deposit.tx_hash,
     snapshotRootHash: undefined,
     snapshotData: undefined
   }))
 
+  // Transform database withdrawals to match the existing Transaction interface
+  const dbWithdrawalTransactions: Transaction[] = dbWithdrawals.map((wd: DatabaseWithdrawal) => ({
+    id: `dbw-${wd.id}`,
+    type: 'withdraw' as const,
+    amount: wd.amount.toString(),
+    token: 'RBT',
+    value: `$${(wd.amount * 1000).toFixed(2)}`,
+    status: 'completed' as const,
+    timestamp: (() => {
+      const ts = wd.created_at as unknown as string
+      if (!ts) return Date.now()
+      if (/[zZ]|[+-]\d{2}:?\d{2}$/.test(ts)) return new Date(ts).getTime()
+      const iso = ts.replace(' ', 'T') + 'Z'
+      return new Date(iso).getTime()
+    })(),
+    hash: wd.tx_hash,
+    snapshotRootHash: undefined,
+    snapshotData: undefined
+  }))
+
   // Combine and sort all transactions
-  const allTransactions = [...vaultTransactions, ...dbTransactions]
-    .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+  const allTransactions = [...vaultTransactions, ...dbTransactions, ...dbWithdrawalTransactions]
+    .sort((a, b) => b.timestamp - a.timestamp)
 
   const transactions = allTransactions
 
@@ -132,17 +160,9 @@ export default function HistoryPage() {
   const endIndex = startIndex + itemsPerPage
   const paginatedTransactions = filteredTransactions.slice(startIndex, endIndex)
 
-  const formatTimeAgo = (timestamp: string) => {
-    const txTime = new Date(timestamp)
-    const nowMs = Date.now()
-    const txMs = txTime.getTime()
-    if (Number.isNaN(txMs)) return 'just now'
-
-    const diffInSeconds = Math.floor((nowMs - txMs) / 1000)
-    if (diffInSeconds < 60) return `${diffInSeconds} seconds ago`
-    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`
-    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`
-    return `${Math.floor(diffInSeconds / 86400)} days ago`
+  const formatUTC = (timestampMs: number) => {
+    if (!timestampMs || Number.isNaN(timestampMs)) return ''
+    return new Date(timestampMs).toISOString()
   }
 
   return (
@@ -153,11 +173,12 @@ export default function HistoryPage() {
         <p className="text-gray-600 mt-2">
           View all vault transactions and activity from the blockchain
         </p>
-        {(eventsError || depositsError) && (
+        {(eventsError || depositsError || withdrawalsError) && (
           <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
             <p className="text-red-600 text-sm">
               {eventsError && `Error loading events: ${eventsError.message}`}
-              {depositsError && `Error loading deposits: ${depositsError.message}`}
+              {depositsError && ` Error loading deposits: ${depositsError.message}`}
+              {withdrawalsError && ` Error loading withdrawals: ${withdrawalsError.message}`}
             </p>
           </div>
         )}
@@ -223,6 +244,7 @@ export default function HistoryPage() {
             <Button
               onClick={() => {
                 refetchDeposits()
+                refetchWithdrawals()
                 // Note: vault events will auto-refresh when component re-mounts
               }}
               variant="outline"
@@ -236,7 +258,7 @@ export default function HistoryPage() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {(isLoadingEvents || isLoadingDeposits) ? (
+            {(isLoadingEvents || isLoadingDeposits || isLoadingWithdrawals) ? (
               <div className="text-center py-8">
                 <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-purple-600" />
                 <p className="text-gray-500">Loading transaction history...</p>
@@ -268,7 +290,7 @@ export default function HistoryPage() {
                             </Badge>
                           )}
                         </div>
-                        <p className="text-sm text-gray-600">{formatTimeAgo(tx.timestamp)}</p>
+                        <p className="text-sm text-gray-600 font-mono">{formatUTC(tx.timestamp)}</p>
                         <div className="flex items-center space-x-2">
                           <p className="text-xs text-gray-500 font-mono">{tx.hash.slice(0, 8)}...{tx.hash.slice(-8)}</p>
                           <a
